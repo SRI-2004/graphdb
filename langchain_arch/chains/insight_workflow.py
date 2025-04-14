@@ -139,24 +139,38 @@ class InsightWorkflow:
             # --- Step 4: Generate Insight using ainvoke --- 
             yield {"type": "status", "step": "generate_insight", "status": "in_progress", "details": "Generating insight..."}
             insight_gen_final_data = None # Initialize
+            raw_llm_output = None # To store the AIMessage
             
             try:
                 insight_input = {"query": user_query, "data": all_results_combined}
-                # Invoke the chain directly. Since JsonOutputParser is the last step
-                # in the agent's chain, this returns the already parsed dictionary.
-                insight_gen_final_data = await self.insight_generator.chain.ainvoke(insight_input)
+                # Invoke the chain, this returns the AIMessage object
+                raw_llm_output = await self.insight_generator.chain.ainvoke(insight_input)
                 
+                # Explicitly parse the content of the message using the agent's parser
+                yield {"type": "status", "step": "generate_insight", "status": "in_progress", "details": "Parsing insight generator output..."}
+                # Ensure the agent has the 'output_parser' attribute defined in its __init__
+                if hasattr(self.insight_generator, 'output_parser') and callable(getattr(self.insight_generator.output_parser, 'parse', None)):
+                    insight_gen_final_data = self.insight_generator.output_parser.parse(raw_llm_output.content)
+                else:
+                    # Fallback or raise error if parser is missing
+                    yield {"type": "error", "step": "generate_insight", "status": "failed", "message": "InsightGeneratorAgent is missing the output_parser attribute."}
+                    return 
+
+            except OutputParserException as ope:
+                # Handle parsing errors
+                yield {"type": "error", "step": "generate_insight", "status": "failed", "message": f"Failed to parse insight generator output: {ope}"}
+                return
             except Exception as ig_err:
-                 # Catch errors during the ainvoke call (LLM call or parsing within the chain)
-                yield {"type": "error", "step": "generate_insight", "status": "failed", "message": f"Failed during insight generation: {ig_err}"}
+                # Catch other errors during ainvoke or parsing
+                yield {"type": "error", "step": "generate_insight", "status": "failed", "message": f"Failed during insight generation or parsing: {ig_err}"}
                 return
 
-            # Check for the correct key
+            # Check the parsed data
             if not isinstance(insight_gen_final_data, dict) or "insight" not in insight_gen_final_data:
-                 yield {"type": "error", "step": "generate_insight", "status": "failed", "message": f"Insight generator returned invalid final output format: {insight_gen_final_data}"}
+                 yield {"type": "error", "step": "generate_insight", "status": "failed", "message": f"Insight generator returned invalid final output format after parsing: {insight_gen_final_data}"}
                  return
 
-            # Yield the final result dictionary (containing insight and reasoning)
+            # Yield the final parsed dictionary
             yield {"type": "final_insight", "step": "generate_insight", "status": "completed", **insight_gen_final_data}
 
         except Exception as e:
