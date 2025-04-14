@@ -1,0 +1,330 @@
+
+{
+    "entities": {
+      "AdAccount": {
+        "properties": [
+          "account_id",
+          "name",
+          "currency",
+          "timezone",
+          "... other account-level fields ..."
+        ],
+        "relationships": {
+          "HAS_CAMPAIGN": "Campaign",
+          "HAS_CONVERSION_ACTION": "ConversionAction",
+          "UNDERPERFORMING_AD": "Ad",
+          "HIGH_ROAS_KEYWORD": "Keyword",
+          "BUDGET_CONSTRAINED_CAMPAIGN": "Campaign"
+        }
+      },
+      "Campaign": {
+        "properties": [
+          "campaign_id",
+          "name",
+          "status",
+          "campaign_budget_id",
+          "campaign_type",
+          "... other campaign settings ..."
+        ],
+        "metrics": {
+          "engagement": [
+            "impressions",
+            "interactions",
+            "interaction_rate",
+            "engagements",
+            "engagement_rate",
+            "clicks",
+            "ctr",
+            "invalid_clicks",
+            "invalid_click_rate",
+            "active_view_impressions",
+            "active_view_viewability",
+            "active_view_measurability",
+            "active_view_measurable_impressions",
+            "active_view_measurable_cost_micros",
+            "active_view_ctr",
+            "active_view_cpm",
+            "video_views",
+            "video_view_rate",
+            "video_quartile_25_rate",
+            "video_quartile_50_rate",
+            "video_quartile_75_rate",
+            "video_quartile_100_rate"
+          ],
+          "cost": [
+            "cost_micros",
+            "average_cpc",
+            "average_cpm",
+            "average_cpv",
+            "average_cpe",
+            "cost_per_conversion",
+            "cost_per_all_conversions",
+            "cost_per_current_model_attributed_conversion",
+            "cost_of_goods_sold_micros"
+          ],
+          "conversion": [
+            "conversions",
+            "conversion_value",
+            "conversions_from_interactions_rate",
+            "value_per_conversion",
+            "conversion_value_per_cost",
+            "all_conversions",
+            "all_conversions_value",
+            "all_conversions_from_interactions_rate",
+            "all_conversions_from_interactions_value_per_interaction",
+            "view_through_conversions",
+            "all_conversions_from_click_to_call",
+            "all_conversions_from_directions",
+            "all_conversions_from_menu",
+            "all_conversions_from_order",
+            "all_conversions_from_other_engagement",
+            "all_conversions_from_store_visit",
+            "all_conversions_from_website",
+            "all_conversions_from_location_asset_click_to_call",
+            "all_conversions_from_location_asset_directions",
+            "all_conversions_from_location_asset_menu",
+            "all_conversions_from_location_asset_order",
+            "all_conversions_from_location_asset_other_engagement",
+            "all_conversions_from_location_asset_store_visits",
+            "all_conversions_from_location_asset_website",
+            "cross_device_conversions",
+            "cross_device_conversions_value_micros",
+            "current_model_attributed_conversions",
+            "current_model_attributed_conversions_value",
+            "current_model_attributed_conversions_from_interactions_rate",
+            "current_model_attributed_conversions_from_interactions_value_per_interaction",
+            "current_model_attributed_conversions_value_per_cost",
+            "value_per_all_conversions",
+            "value_per_current_model_attributed_conversion",
+            "biddable_app_install_conversions",
+            "biddable_app_post_install_conversions",
+            "gross_profit_micros",
+            "gross_profit_margin",
+            "average_order_value_micros",
+            "lead_cost_of_goods_sold_micros",
+            "lead_revenue_micros",
+            "lead_gross_profit_micros",
+            "lead_units_sold",
+            "cross_sell_cost_of_goods_sold_micros",
+            "cross_sell_revenue_micros",
+            "cross_sell_gross_profit_micros",
+            "cross_sell_units_sold"
+          ],
+          "competitive": [
+            "search_impression_share",
+            "search_exact_match_impression_share",
+            "search_click_share",
+            "search_top_impression_share",
+            "search_absolute_top_impression_share",
+            "search_budget_lost_impression_share",
+            "search_budget_lost_top_impression_share",
+            "search_budget_lost_absolute_top_impression_share",
+            "search_rank_lost_impression_share",
+            "search_rank_lost_top_impression_share",
+            "search_rank_lost_absolute_top_impression_share",
+            "absolute_top_impression_percentage",
+            "top_impression_percentage",
+            "benchmark_ctr",
+            "benchmark_average_max_cpc"
+          ],
+          "call": [
+            "phone_impressions",
+            "phone_calls",
+            "phone_through_rate"
+          ],
+          "budget": [
+            "average_target_cpa_micros",
+            "average_target_roas"
+          ]
+        },
+        "relationships": {
+          "HAS_ADGROUP": "AdGroup",
+          "HAS_METRIC": "Metric",
+          "HAS_ENGAGEMENT_METRIC": "Metric",
+          "HAS_COST_METRIC": "Metric",
+          "HAS_CONVERSION_METRIC": "Metric",
+          "HAS_COMPETITIVE_METRIC": "Metric",
+          "HAS_DAILY_SNAPSHOT": "CampaignMetricsSnapshot"
+        }
+      },
+      "AdGroup": {
+        "properties": [
+          "ad_group_id",
+          "name",
+          "status",
+          "campaign_id",
+          "... other ad group fields ..."
+        ],
+        "metrics": {
+          "engagement": [ "impressions", "clicks", "ctr", "... (same metrics as campaign, at ad group level)" ],
+          "cost": [ "cost_micros", "average_cpc", "... cost metrics ..." ],
+          "conversion": [ "conversions", "conversion_value", "... conversion metrics ..." ],
+          "competitive": [ "search_impression_share", "... impression share metrics ..." ],
+          "call": [ "phone_impressions", "phone_calls", "phone_through_rate" ],
+          "budget": [ "average_target_cpa_micros", "average_target_roas" ]
+        },
+        "relationships": {
+          "HAS_AD": "Ad",
+          "HAS_KEYWORD": "Keyword",
+          "HAS_AUDIENCE": "Audience",
+          "HAS_METRIC": "Metric",
+          "HAS_ENGAGEMENT_METRIC": "Metric",
+          "HAS_COST_METRIC": "Metric",
+          "HAS_CONVERSION_METRIC": "Metric",
+          "HAS_COMPETITIVE_METRIC": "Metric",
+          "HAS_DAILY_SNAPSHOT": "AdGroupMetricsSnapshot"
+        }
+      },
+      "Ad": {
+        "properties": [
+          "ad_id",
+          "ad_group_id",
+          "ad_type",
+          "status",
+          "headline",
+          "description",
+          "url",
+          "... other ad creative fields ..."
+        ],
+        "metrics": {
+          "engagement": [ "impressions", "clicks", "ctr", "interactions", "interaction_rate", "engagements", "engagement_rate", "video_views", "video_view_rate" ],
+          "cost": [ "cost_micros", "average_cpc", "average_cpm", "average_cpv", "average_cpe" ],
+          "conversion": [ "conversions", "conversion_value", "conversions_from_interactions_rate", "cost_per_conversion", "conversion_value_per_cost", "all_conversions", "all_conversions_value", "view_through_conversions" ],
+          "call": [ "phone_impressions", "phone_calls", "phone_through_rate" ]
+          
+        },
+        "relationships": {
+          "USES_ASSET": "Asset",
+          "HAS_METRIC": "Metric",
+          "HAS_ENGAGEMENT_METRIC": "Metric",
+          "HAS_COST_METRIC": "Metric",
+          "HAS_CONVERSION_METRIC": "Metric",
+          "HAS_DAILY_SNAPSHOT": "AdMetricsSnapshot"
+        }
+      },
+      "Keyword": {
+        "properties": [
+          "criterion_id",
+          "text",
+          "match_type",
+          "ad_group_id",
+          "status",
+          "quality_score",
+          "... other keyword fields ..."
+        ],
+        "metrics": {
+          "engagement": [ "impressions", "clicks", "ctr" ],
+          "cost": [ "cost_micros", "average_cpc" ],
+          "conversion": [ "conversions", "conversion_value", "cost_per_conversion", "conversion_value_per_cost", "all_conversions", "view_through_conversions" ],
+          "competitive": [ "search_impression_share", "search_exact_match_impression_share", "search_rank_lost_impression_share", "search_rank_lost_top_impression_share" ]
+        },
+        "relationships": {
+          "HAS_METRIC": "Metric",
+          "HAS_ENGAGEMENT_METRIC": "Metric",
+          "HAS_COST_METRIC": "Metric",
+          "HAS_CONVERSION_METRIC": "Metric",
+          "HAS_COMPETITIVE_METRIC": "Metric",
+          "HIGH_ROAS_KEYWORD_OF": "AdAccount"
+          
+        }
+      },
+      "Audience": {
+        "properties": [
+          "criterion_id",
+          "type",
+          "name",
+          "ad_group_id",
+          "status",
+          "... other audience targeting fields ..."
+        ],
+        "metrics": {
+          "engagement": [ "impressions", "clicks", "ctr" ],
+          "cost": [ "cost_micros", "average_cpc" ],
+          "conversion": [ "conversions", "conversion_value", "cost_per_conversion", "conversion_value_per_cost", "all_conversions", "view_through_conversions" ]
+          
+        },
+        "relationships": {
+          "HAS_METRIC": "Metric",
+          "HAS_ENGAGEMENT_METRIC": "Metric",
+          "HAS_COST_METRIC": "Metric",
+          "HAS_CONVERSION_METRIC": "Metric"
+        }
+      },
+      "Asset": {
+        "properties": [
+          "asset_id",
+          "asset_type",
+          "name",
+          "file_hash",
+          "... other asset metadata ..."
+        ],
+        "metrics": {
+          "engagement": [ "impressions", "views", "clicks" ],
+          "performance": [ "asset_performance_index" ]
+      },
+        "relationships": {
+          "USED_IN_AD": "Ad",
+          "HAS_METRIC": "Metric"
+        }
+      },
+      "ConversionAction": {
+        "properties": [
+          "conversion_action_id",
+          "name",
+          "category",
+          "type",    
+          "value_per_conversion",
+          "counting_type",
+          "... other conversion action settings ..."
+        ],
+        "metrics": {
+          "conversions": [ "conversions", "conversion_value", "all_conversions", "all_conversions_value", "cross_device_conversions" ]
+    },
+        "relationships": {
+          "HAS_METRIC": "Metric"
+        }
+      },
+      "Metric": {
+        "properties": [
+          "name",      
+          "category",  
+          "value",     
+          "date",      
+          "period"     
+        ],
+        "relationships": {
+          "BELONGS_TO": [
+            "AdAccount",
+            "Campaign",
+            "AdGroup",
+            "Ad",
+            "Keyword",
+            "Audience",
+            "Asset",
+            "ConversionAction"
+          ]
+        }
+      },
+      "CampaignMetricsSnapshot": {
+        "properties": [
+          "campaign_id",
+          "date",
+        
+          "...",
+          "conversions",
+          "conversion_value",
+          "cost_micros",
+          "impressions",
+          "clicks",
+          "ctr",
+          "..."
+        ],
+        "relationships": {
+          "SNAPSHOT_OF": "Campaign"
+        }
+      }
+
+    }
+  }
+  
+ 
