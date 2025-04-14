@@ -1,0 +1,19 @@
+**Generate Opt Queries:**
+To optimize campaigns, we need to identify underperforming elements across different levels (Campaign, Ad) and metrics (Cost Per Conversion, CTR). The queries are designed to rank entities by performance, focusing on those with the highest cost per conversion and lowest CTR, which are common indicators of inefficiency. 
+
+1. **Campaigns with highest Cost Per Conversion (lifetime):** This query identifies campaigns that are expensive relative to the conversions they generate, suggesting potential areas for cost reduction or strategy adjustment.
+
+2. **Campaigns with lowest CTR (lifetime):** This query highlights campaigns with low engagement, indicating potential issues with ad relevance or targeting.
+
+3. **Ads with highest Cost Per Conversion (last 30 days):** This query focuses on recent data to find ads that are costly relative to their conversion output, allowing for timely adjustments.
+
+4. **Ads with lowest CTR (last 30 days, min 500 impressions):** This query identifies ads with low engagement in the recent period, ensuring statistical significance by requiring a minimum number of impressions.
+
+5. **Campaign-level budget/rank lost impression share:** This query provides context on how budget and rank limitations are affecting campaign visibility, which can inform budget reallocation or bid strategy changes.
+
+These queries collectively provide a comprehensive view of performance issues across different levels and timeframes, enabling targeted optimization efforts without relying on arbitrary thresholds.
+
+---
+
+**Generate Recommendations:**
+The analysis synthesized data across multiple objectives, focusing on cost per conversion, CTR, and impression share. High costs per conversion and zero CTR were identified as major inefficiencies, while zero impression share highlighted potential visibility issues. Recommendations prioritize actions that address these inefficiencies, such as pausing high-cost campaigns and optimizing low CTR ads, to improve overall campaign performance.

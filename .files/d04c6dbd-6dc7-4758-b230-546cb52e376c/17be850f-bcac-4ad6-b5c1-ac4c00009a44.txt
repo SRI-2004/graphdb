@@ -1,0 +1,52 @@
+**Identify Campaigns with highest Cost Per Conversion (lifetime):**
+```cypher
+MATCH (c:Campaign)-[:HAS_OVERALL_METRICS]->(m:CampaignOverallMetric)
+WITH c.campaign_id AS campaignId, c.name AS campaignName, m.cost_micros AS totalCostMicros, m.conversions AS totalConversions
+WHERE totalConversions IS NOT NULL AND totalConversions > 0
+WITH campaignId, campaignName, totalCostMicros, totalConversions, toFloat(totalCostMicros) / totalConversions AS costPerConversion
+RETURN campaignId, campaignName, costPerConversion
+ORDER BY costPerConversion DESC
+LIMIT 10
+```
+
+**Find Campaigns with lowest CTR (lifetime):**
+```cypher
+MATCH (c:Campaign)-[:HAS_OVERALL_METRICS]->(m:CampaignOverallMetric)
+WITH c.campaign_id AS campaignId, c.name AS campaignName, m.impressions AS totalImpressions, m.clicks AS totalClicks
+WHERE totalImpressions > 0
+WITH campaignId, campaignName, totalImpressions, totalClicks, toFloat(totalClicks) / totalImpressions AS ctr
+RETURN campaignId, campaignName, ctr
+ORDER BY ctr ASC
+LIMIT 10
+```
+
+**Identify Ads with highest Cost Per Conversion (last 30 days):**
+```cypher
+MATCH (ad:Ad)-[:HAS_MONTHLY_METRICS]->(m:AdMonthlyMetric)
+WHERE m.month_start_date >= apoc.date.format(apoc.date.convert(timestamp() - (30 * 24 * 60 * 60 * 1000), 'ms', 'd'), 'd', "yyyy-MM-dd")
+WITH ad.ad_id AS adId, ad.name AS adName, SUM(m.cost_micros) AS totalCostMicros, SUM(m.conversions) AS totalConversions
+WHERE totalConversions IS NOT NULL AND totalConversions > 0
+WITH adId, adName, totalCostMicros, totalConversions, toFloat(totalCostMicros) / totalConversions AS costPerConversion
+RETURN adId, adName, costPerConversion
+ORDER BY costPerConversion DESC
+LIMIT 10
+```
+
+**Find Ads with lowest CTR (last 30 days, min 500 impressions):**
+```cypher
+MATCH (ad:Ad)-[:HAS_MONTHLY_METRICS]->(m:AdMonthlyMetric)
+WHERE m.month_start_date >= apoc.date.format(apoc.date.convert(timestamp() - (30 * 24 * 60 * 60 * 1000), 'ms', 'd'), 'd', "yyyy-MM-dd")
+WITH ad.ad_id AS adId, ad.name AS adName, SUM(m.impressions) AS totalImpressions, SUM(m.clicks) AS totalClicks
+WHERE totalImpressions > 500
+WITH adId, adName, totalImpressions, totalClicks, toFloat(totalClicks) / totalImpressions AS ctr
+RETURN adId, adName, ctr
+ORDER BY ctr ASC
+LIMIT 10
+```
+
+**Check Campaign-level budget/rank lost impression share:**
+```cypher
+MATCH (c:Campaign)-[:HAS_OVERALL_METRICS]->(m:CampaignOverallMetric)
+RETURN c.campaign_id AS campaignId, c.name AS campaignName, m.search_impression_share AS searchImpressionShare, m.search_budget_lost_impression_share AS searchBudgetLostIS, m.search_rank_lost_impression_share AS searchRankLostIS
+ORDER BY campaignId
+```
