@@ -1,0 +1,3043 @@
+{
+    "account_performance_report": [
+        {
+            "column_name": "customer_id"
+        },
+        {
+            "column_name": "metrics_ctr"
+        },
+        {
+            "column_name": "segments_date"
+        },
+        {
+            "column_name": "segments_week"
+        },
+        {
+            "column_name": "segments_year"
+        },
+        {
+            "column_name": "metrics_clicks"
+        },
+        {
+            "column_name": "segments_month"
+        },
+        {
+            "column_name": "segments_device"
+        },
+        {
+            "column_name": "customer_manager"
+        },
+        {
+            "column_name": "segments_quarter"
+        },
+        {
+            "column_name": "customer_time_zone"
+        },
+        {
+            "column_name": "metrics_average_cpc"
+        },
+        {
+            "column_name": "metrics_average_cpe"
+        },
+        {
+            "column_name": "metrics_average_cpm"
+        },
+        {
+            "column_name": "metrics_average_cpv"
+        },
+        {
+            "column_name": "metrics_conversions"
+        },
+        {
+            "column_name": "metrics_cost_micros"
+        },
+        {
+            "column_name": "metrics_engagements"
+        },
+        {
+            "column_name": "metrics_impressions"
+        },
+        {
+            "column_name": "metrics_video_views"
+        },
+        {
+            "column_name": "metrics_average_cost"
+        },
+        {
+            "column_name": "metrics_interactions"
+        },
+        {
+            "column_name": "segments_day_of_week"
+        },
+        {
+            "column_name": "customer_test_account"
+        },
+        {
+            "column_name": "customer_currency_code"
+        },
+        {
+            "column_name": "metrics_active_view_cpm"
+        },
+        {
+            "column_name": "metrics_active_view_ctr"
+        },
+        {
+            "column_name": "metrics_all_conversions"
+        },
+        {
+            "column_name": "metrics_engagement_rate"
+        },
+        {
+            "column_name": "metrics_video_view_rate"
+        },
+        {
+            "column_name": "metrics_interaction_rate"
+        },
+        {
+            "column_name": "segments_ad_network_type"
+        },
+        {
+            "column_name": "customer_descriptive_name"
+        },
+        {
+            "column_name": "metrics_conversions_value"
+        },
+        {
+            "column_name": "metrics_cost_per_conversion"
+        },
+        {
+            "column_name": "metrics_value_per_conversion"
+        },
+        {
+            "column_name": "customer_auto_tagging_enabled"
+        },
+        {
+            "column_name": "metrics_all_conversions_value"
+        },
+        {
+            "column_name": "metrics_active_view_impressions"
+        },
+        {
+            "column_name": "metrics_active_view_viewability"
+        },
+        {
+            "column_name": "metrics_interaction_event_types"
+        },
+        {
+            "column_name": "metrics_search_impression_share"
+        },
+        {
+            "column_name": "metrics_content_impression_share"
+        },
+        {
+            "column_name": "metrics_cost_per_all_conversions"
+        },
+        {
+            "column_name": "metrics_cross_device_conversions"
+        },
+        {
+            "column_name": "metrics_view_through_conversions"
+        },
+        {
+            "column_name": "metrics_active_view_measurability"
+        },
+        {
+            "column_name": "metrics_value_per_all_conversions"
+        },
+        {
+            "column_name": "metrics_search_rank_lost_impression_share"
+        },
+        {
+            "column_name": "metrics_active_view_measurable_cost_micros"
+        },
+        {
+            "column_name": "metrics_active_view_measurable_impressions"
+        },
+        {
+            "column_name": "metrics_content_rank_lost_impression_share"
+        },
+        {
+            "column_name": "metrics_conversions_from_interactions_rate"
+        },
+        {
+            "column_name": "metrics_search_budget_lost_impression_share"
+        },
+        {
+            "column_name": "metrics_search_exact_match_impression_share"
+        },
+        {
+            "column_name": "metrics_content_budget_lost_impression_share"
+        },
+        {
+            "column_name": "metrics_all_conversions_from_interactions_rate"
+        },
+        {
+            "column_name": "_airbyte_raw_id"
+        },
+        {
+            "column_name": "_airbyte_extracted_at"
+        },
+        {
+            "column_name": "_airbyte_generation_id"
+        },
+        {
+            "column_name": "_airbyte_meta"
+        }
+    ],
+    "ad_group": [
+        {
+            "column_name": "ad_group_id"
+        },
+        {
+            "column_name": "campaign_id"
+        },
+        {
+            "column_name": "ad_group_name"
+        },
+        {
+            "column_name": "ad_group_type"
+        },
+        {
+            "column_name": "segments_date"
+        },
+        {
+            "column_name": "ad_group_labels"
+        },
+        {
+            "column_name": "ad_group_status"
+        },
+        {
+            "column_name": "ad_group_campaign"
+        },
+        {
+            "column_name": "metrics_cost_micros"
+        },
+        {
+            "column_name": "ad_group_target_roas"
+        },
+        {
+            "column_name": "ad_group_base_ad_group"
+        },
+        {
+            "column_name": "ad_group_resource_name"
+        },
+        {
+            "column_name": "ad_group_cpc_bid_micros"
+        },
+        {
+            "column_name": "ad_group_cpm_bid_micros"
+        },
+        {
+            "column_name": "ad_group_cpv_bid_micros"
+        },
+        {
+            "column_name": "ad_group_ad_rotation_mode"
+        },
+        {
+            "column_name": "ad_group_final_url_suffix"
+        },
+        {
+            "column_name": "ad_group_target_cpa_micros"
+        },
+        {
+            "column_name": "ad_group_target_cpm_micros"
+        },
+        {
+            "column_name": "ad_group_effective_target_roas"
+        },
+        {
+            "column_name": "ad_group_tracking_url_template"
+        },
+        {
+            "column_name": "ad_group_url_custom_parameters"
+        },
+        {
+            "column_name": "ad_group_percent_cpc_bid_micros"
+        },
+        {
+            "column_name": "ad_group_effective_target_cpa_micros"
+        },
+        {
+            "column_name": "ad_group_effective_target_cpa_source"
+        },
+        {
+            "column_name": "ad_group_optimized_targeting_enabled"
+        },
+        {
+            "column_name": "ad_group_display_custom_bid_dimension"
+        },
+        {
+            "column_name": "ad_group_effective_target_roas_source"
+        },
+        {
+            "column_name": "ad_group_excluded_parent_asset_field_types"
+        },
+        {
+            "column_name": "ad_group_targeting_setting_target_restrictions"
+        },
+        {
+            "column_name": "_airbyte_raw_id"
+        },
+        {
+            "column_name": "_airbyte_extracted_at"
+        },
+        {
+            "column_name": "_airbyte_generation_id"
+        },
+        {
+            "column_name": "_airbyte_meta"
+        }
+    ],
+    "ad_group_ad": [
+        {
+            "column_name": "ad_group_id"
+        },
+        {
+            "column_name": "segments_date"
+        },
+        {
+            "column_name": "ad_group_ad_ad_id"
+        },
+        {
+            "column_name": "ad_group_ad_labels"
+        },
+        {
+            "column_name": "ad_group_ad_status"
+        },
+        {
+            "column_name": "ad_group_ad_ad_name"
+        },
+        {
+            "column_name": "ad_group_ad_ad_type"
+        },
+        {
+            "column_name": "ad_group_ad_ad_group"
+        },
+        {
+            "column_name": "ad_group_ad_ad_hotel_ad"
+        },
+        {
+            "column_name": "ad_group_ad_ad_strength"
+        },
+        {
+            "column_name": "ad_group_ad_ad_final_urls"
+        },
+        {
+            "column_name": "ad_group_ad_resource_name"
+        },
+        {
+            "column_name": "ad_group_ad_ad_display_url"
+        },
+        {
+            "column_name": "ad_group_ad_ad_app_ad_images"
+        },
+        {
+            "column_name": "ad_group_ad_ad_call_ad_path1"
+        },
+        {
+            "column_name": "ad_group_ad_ad_call_ad_path2"
+        },
+        {
+            "column_name": "ad_group_ad_ad_image_ad_name"
+        },
+        {
+            "column_name": "ad_group_ad_ad_resource_name"
+        },
+        {
+            "column_name": "ad_group_ad_ad_final_app_urls"
+        },
+        {
+            "column_name": "ad_group_ad_ad_local_ad_path1"
+        },
+        {
+            "column_name": "ad_group_ad_ad_local_ad_path2"
+        },
+        {
+            "column_name": "ad_group_ad_ad_local_ad_videos"
+        },
+        {
+            "column_name": "ad_group_ad_ad_url_collections"
+        },
+        {
+            "column_name": "ad_group_ad_ad_app_ad_headlines"
+        },
+        {
+            "column_name": "ad_group_ad_ad_final_url_suffix"
+        },
+        {
+            "column_name": "ad_group_ad_ad_text_ad_headline"
+        },
+        {
+            "column_name": "ad_group_ad_ad_call_ad_headline1"
+        },
+        {
+            "column_name": "ad_group_ad_ad_call_ad_headline2"
+        },
+        {
+            "column_name": "ad_group_ad_ad_device_preference"
+        },
+        {
+            "column_name": "ad_group_ad_ad_final_mobile_urls"
+        },
+        {
+            "column_name": "ad_group_ad_ad_shopping_smart_ad"
+        },
+        {
+            "column_name": "ad_group_ad_ad_image_ad_image_url"
+        },
+        {
+            "column_name": "ad_group_ad_ad_image_ad_mime_type"
+        },
+        {
+            "column_name": "ad_group_ad_ad_local_ad_headlines"
+        },
+        {
+            "column_name": "ad_group_ad_ad_added_by_google_ads"
+        },
+        {
+            "column_name": "ad_group_ad_ad_app_ad_descriptions"
+        },
+        {
+            "column_name": "ad_group_ad_ad_shopping_product_ad"
+        },
+        {
+            "column_name": "ad_group_ad_ad_call_ad_call_tracked"
+        },
+        {
+            "column_name": "ad_group_ad_ad_call_ad_country_code"
+        },
+        {
+            "column_name": "ad_group_ad_ad_call_ad_description1"
+        },
+        {
+            "column_name": "ad_group_ad_ad_call_ad_description2"
+        },
+        {
+            "column_name": "ad_group_ad_ad_call_ad_phone_number"
+        },
+        {
+            "column_name": "ad_group_ad_ad_image_ad_pixel_width"
+        },
+        {
+            "column_name": "ad_group_ad_ad_local_ad_logo_images"
+        },
+        {
+            "column_name": "ad_group_ad_ad_text_ad_description1"
+        },
+        {
+            "column_name": "ad_group_ad_ad_text_ad_description2"
+        },
+        {
+            "column_name": "ad_group_ad_ad_app_ad_youtube_videos"
+        },
+        {
+            "column_name": "ad_group_ad_ad_call_ad_business_name"
+        },
+        {
+            "column_name": "ad_group_ad_ad_image_ad_pixel_height"
+        },
+        {
+            "column_name": "ad_group_ad_ad_legacy_app_install_ad"
+        },
+        {
+            "column_name": "ad_group_ad_ad_local_ad_descriptions"
+        },
+        {
+            "column_name": "ad_group_ad_ad_tracking_url_template"
+        },
+        {
+            "column_name": "ad_group_ad_ad_url_custom_parameters"
+        },
+        {
+            "column_name": "ad_group_ad_ad_expanded_text_ad_path1"
+        },
+        {
+            "column_name": "ad_group_ad_ad_expanded_text_ad_path2"
+        },
+        {
+            "column_name": "ad_group_ad_ad_app_ad_mandatory_ad_text"
+        },
+        {
+            "column_name": "ad_group_ad_ad_app_engagement_ad_images"
+        },
+        {
+            "column_name": "ad_group_ad_ad_app_engagement_ad_videos"
+        },
+        {
+            "column_name": "ad_group_ad_ad_local_ad_call_to_actions"
+        },
+        {
+            "column_name": "ad_group_ad_ad_call_ad_conversion_action"
+        },
+        {
+            "column_name": "ad_group_ad_ad_local_ad_marketing_images"
+        },
+        {
+            "column_name": "ad_group_ad_ad_video_ad_in_feed_headline"
+        },
+        {
+            "column_name": "ad_group_ad_policy_summary_review_status"
+        },
+        {
+            "column_name": "ad_group_ad_ad_app_ad_html5_media_bundles"
+        },
+        {
+            "column_name": "ad_group_ad_ad_image_ad_preview_image_url"
+        },
+        {
+            "column_name": "ad_group_ad_ad_responsive_search_ad_path1"
+        },
+        {
+            "column_name": "ad_group_ad_ad_responsive_search_ad_path2"
+        },
+        {
+            "column_name": "ad_group_ad_ad_video_responsive_ad_videos"
+        },
+        {
+            "column_name": "ad_group_ad_ad_app_engagement_ad_headlines"
+        },
+        {
+            "column_name": "ad_group_ad_ad_smart_campaign_ad_headlines"
+        },
+        {
+            "column_name": "ad_group_ad_policy_summary_approval_status"
+        },
+        {
+            "column_name": "ad_group_ad_ad_expanded_text_ad_description"
+        },
+        {
+            "column_name": "ad_group_ad_ad_image_ad_preview_pixel_width"
+        },
+        {
+            "column_name": "ad_group_ad_ad_video_ad_out_stream_headline"
+        },
+        {
+            "column_name": "ad_group_ad_ad_expanded_text_ad_description2"
+        },
+        {
+            "column_name": "ad_group_ad_ad_image_ad_preview_pixel_height"
+        },
+        {
+            "column_name": "ad_group_ad_ad_video_ad_in_feed_description1"
+        },
+        {
+            "column_name": "ad_group_ad_ad_video_ad_in_feed_description2"
+        },
+        {
+            "column_name": "ad_group_ad_ad_video_responsive_ad_headlines"
+        },
+        {
+            "column_name": "ad_group_ad_ad_app_engagement_ad_descriptions"
+        },
+        {
+            "column_name": "ad_group_ad_ad_display_upload_ad_media_bundle"
+        },
+        {
+            "column_name": "ad_group_ad_ad_responsive_search_ad_headlines"
+        },
+        {
+            "column_name": "ad_group_ad_ad_smart_campaign_ad_descriptions"
+        },
+        {
+            "column_name": "ad_group_ad_ad_system_managed_resource_source"
+        },
+        {
+            "column_name": "ad_group_ad_ad_call_ad_disable_call_conversion"
+        },
+        {
+            "column_name": "ad_group_ad_ad_expanded_text_ad_headline_part1"
+        },
+        {
+            "column_name": "ad_group_ad_ad_expanded_text_ad_headline_part2"
+        },
+        {
+            "column_name": "ad_group_ad_ad_expanded_text_ad_headline_part3"
+        },
+        {
+            "column_name": "ad_group_ad_ad_responsive_display_ad_headlines"
+        },
+        {
+            "column_name": "ad_group_ad_ad_video_ad_out_stream_description"
+        },
+        {
+            "column_name": "ad_group_ad_ad_responsive_display_ad_main_color"
+        },
+        {
+            "column_name": "ad_group_ad_ad_responsive_display_ad_promo_text"
+        },
+        {
+            "column_name": "ad_group_ad_ad_video_responsive_ad_descriptions"
+        },
+        {
+            "column_name": "ad_group_ad_policy_summary_policy_topic_entries"
+        },
+        {
+            "column_name": "ad_group_ad_ad_responsive_display_ad_logo_images"
+        },
+        {
+            "column_name": "ad_group_ad_ad_responsive_search_ad_descriptions"
+        },
+        {
+            "column_name": "ad_group_ad_ad_call_ad_conversion_reporting_state"
+        },
+        {
+            "column_name": "ad_group_ad_ad_responsive_display_ad_accent_color"
+        },
+        {
+            "column_name": "ad_group_ad_ad_responsive_display_ad_descriptions"
+        },
+        {
+            "column_name": "ad_group_ad_ad_responsive_display_ad_price_prefix"
+        },
+        {
+            "column_name": "ad_group_ad_ad_video_ad_in_stream_action_headline"
+        },
+        {
+            "column_name": "ad_group_ad_ad_video_responsive_ad_long_headlines"
+        },
+        {
+            "column_name": "ad_group_ad_ad_responsive_display_ad_business_name"
+        },
+        {
+            "column_name": "ad_group_ad_ad_responsive_display_ad_long_headline"
+        },
+        {
+            "column_name": "ad_group_ad_ad_video_responsive_ad_call_to_actions"
+        },
+        {
+            "column_name": "ad_group_ad_ad_responsive_display_ad_format_setting"
+        },
+        {
+            "column_name": "ad_group_ad_ad_responsive_display_ad_youtube_videos"
+        },
+        {
+            "column_name": "ad_group_ad_ad_call_ad_phone_number_verification_url"
+        },
+        {
+            "column_name": "ad_group_ad_ad_video_responsive_ad_companion_banners"
+        },
+        {
+            "column_name": "ad_group_ad_ad_expanded_dynamic_search_ad_description"
+        },
+        {
+            "column_name": "ad_group_ad_ad_responsive_display_ad_marketing_images"
+        },
+        {
+            "column_name": "ad_group_ad_ad_video_ad_in_stream_action_button_label"
+        },
+        {
+            "column_name": "ad_group_ad_ad_expanded_dynamic_search_ad_description2"
+        },
+        {
+            "column_name": "ad_group_ad_ad_legacy_responsive_display_ad_logo_image"
+        },
+        {
+            "column_name": "ad_group_ad_ad_legacy_responsive_display_ad_main_color"
+        },
+        {
+            "column_name": "ad_group_ad_ad_legacy_responsive_display_ad_promo_text"
+        },
+        {
+            "column_name": "ad_group_ad_ad_shopping_comparison_listing_ad_headline"
+        },
+        {
+            "column_name": "ad_group_ad_ad_legacy_responsive_display_ad_description"
+        },
+        {
+            "column_name": "ad_group_ad_ad_responsive_display_ad_square_logo_images"
+        },
+        {
+            "column_name": "ad_group_ad_ad_legacy_responsive_display_ad_accent_color"
+        },
+        {
+            "column_name": "ad_group_ad_ad_legacy_responsive_display_ad_price_prefix"
+        },
+        {
+            "column_name": "ad_group_ad_ad_responsive_display_ad_call_to_action_text"
+        },
+        {
+            "column_name": "ad_group_ad_ad_legacy_responsive_display_ad_business_name"
+        },
+        {
+            "column_name": "ad_group_ad_ad_legacy_responsive_display_ad_long_headline"
+        },
+        {
+            "column_name": "ad_group_ad_ad_responsive_display_ad_allow_flexible_color"
+        },
+        {
+            "column_name": "ad_group_ad_ad_legacy_responsive_display_ad_format_setting"
+        },
+        {
+            "column_name": "ad_group_ad_ad_legacy_responsive_display_ad_short_headline"
+        },
+        {
+            "column_name": "ad_group_ad_ad_legacy_responsive_display_ad_marketing_image"
+        },
+        {
+            "column_name": "ad_group_ad_ad_display_upload_ad_display_upload_product_type"
+        },
+        {
+            "column_name": "ad_group_ad_ad_responsive_display_ad_square_marketing_images"
+        },
+        {
+            "column_name": "ad_group_ad_ad_legacy_responsive_display_ad_square_logo_image"
+        },
+        {
+            "column_name": "ad_group_ad_ad_legacy_responsive_display_ad_call_to_action_text"
+        },
+        {
+            "column_name": "ad_group_ad_ad_legacy_responsive_display_ad_allow_flexible_colo"
+        },
+        {
+            "column_name": "ad_group_ad_ad_legacy_responsive_display_ad_square_marketing_im"
+        },
+        {
+            "column_name": "ad_group_ad_ad_responsive_display_ad_control_spec_enable_autoge"
+        },
+        {
+            "column_name": "ad_group_ad_ad_responsive_display_ad_control_spec_enable_asset_"
+        },
+        {
+            "column_name": "_airbyte_raw_id"
+        },
+        {
+            "column_name": "_airbyte_extracted_at"
+        },
+        {
+            "column_name": "_airbyte_generation_id"
+        },
+        {
+            "column_name": "_airbyte_meta"
+        }
+    ],
+    "ad_group_ad_label": [
+        {
+            "column_name": "label_id"
+        },
+        {
+            "column_name": "label_name"
+        },
+        {
+            "column_name": "ad_group_id"
+        },
+        {
+            "column_name": "ad_group_ad_ad_id"
+        },
+        {
+            "column_name": "label_resource_name"
+        },
+        {
+            "column_name": "ad_group_ad_ad_resource_name"
+        },
+        {
+            "column_name": "ad_group_ad_label_resource_name"
+        },
+        {
+            "column_name": "_airbyte_raw_id"
+        },
+        {
+            "column_name": "_airbyte_extracted_at"
+        },
+        {
+            "column_name": "_airbyte_generation_id"
+        },
+        {
+            "column_name": "_airbyte_meta"
+        }
+    ],
+    "ad_group_criterion": [
+        {
+            "column_name": "deleted_at"
+        },
+        {
+            "column_name": "ad_group_id"
+        },
+        {
+            "column_name": "ad_group_criterion_type"
+        },
+        {
+            "column_name": "ad_group_criterion_labels"
+        },
+        {
+            "column_name": "ad_group_criterion_status"
+        },
+        {
+            "column_name": "ad_group_criterion_ad_group"
+        },
+        {
+            "column_name": "ad_group_criterion_negative"
+        },
+        {
+            "column_name": "ad_group_criterion_final_urls"
+        },
+        {
+            "column_name": "ad_group_criterion_topic_path"
+        },
+        {
+            "column_name": "ad_group_criterion_gender_type"
+        },
+        {
+            "column_name": "ad_group_criterion_bid_modifier"
+        },
+        {
+            "column_name": "ad_group_criterion_criterion_id"
+        },
+        {
+            "column_name": "ad_group_criterion_display_name"
+        },
+        {
+            "column_name": "ad_group_criterion_keyword_text"
+        },
+        {
+            "column_name": "ad_group_criterion_placement_url"
+        },
+        {
+            "column_name": "ad_group_criterion_resource_name"
+        },
+        {
+            "column_name": "ad_group_criterion_age_range_type"
+        },
+        {
+            "column_name": "ad_group_criterion_cpc_bid_micros"
+        },
+        {
+            "column_name": "ad_group_criterion_cpm_bid_micros"
+        },
+        {
+            "column_name": "ad_group_criterion_cpv_bid_micros"
+        },
+        {
+            "column_name": "ad_group_criterion_approval_status"
+        },
+        {
+            "column_name": "ad_group_criterion_final_url_suffix"
+        },
+        {
+            "column_name": "change_status_last_change_date_time"
+        },
+        {
+            "column_name": "ad_group_criterion_audience_audience"
+        },
+        {
+            "column_name": "ad_group_criterion_final_mobile_urls"
+        },
+        {
+            "column_name": "ad_group_criterion_income_range_type"
+        },
+        {
+            "column_name": "ad_group_criterion_keyword_match_type"
+        },
+        {
+            "column_name": "ad_group_criterion_webpage_conditions"
+        },
+        {
+            "column_name": "ad_group_criterion_disapproval_reasons"
+        },
+        {
+            "column_name": "ad_group_criterion_user_list_user_list"
+        },
+        {
+            "column_name": "ad_group_criterion_parental_status_type"
+        },
+        {
+            "column_name": "ad_group_criterion_topic_topic_constant"
+        },
+        {
+            "column_name": "ad_group_criterion_system_serving_status"
+        },
+        {
+            "column_name": "ad_group_criterion_tracking_url_template"
+        },
+        {
+            "column_name": "ad_group_criterion_url_custom_parameters"
+        },
+        {
+            "column_name": "ad_group_criterion_app_payment_model_type"
+        },
+        {
+            "column_name": "ad_group_criterion_percent_cpc_bid_micros"
+        },
+        {
+            "column_name": "ad_group_criterion_webpage_criterion_name"
+        },
+        {
+            "column_name": "ad_group_criterion_youtube_video_video_id"
+        },
+        {
+            "column_name": "ad_group_criterion_mobile_application_name"
+        },
+        {
+            "column_name": "ad_group_criterion_effective_cpc_bid_micros"
+        },
+        {
+            "column_name": "ad_group_criterion_effective_cpc_bid_source"
+        },
+        {
+            "column_name": "ad_group_criterion_effective_cpm_bid_micros"
+        },
+        {
+            "column_name": "ad_group_criterion_effective_cpm_bid_source"
+        },
+        {
+            "column_name": "ad_group_criterion_effective_cpv_bid_micros"
+        },
+        {
+            "column_name": "ad_group_criterion_effective_cpv_bid_source"
+        },
+        {
+            "column_name": "ad_group_criterion_mobile_application_app_id"
+        },
+        {
+            "column_name": "ad_group_criterion_quality_info_quality_score"
+        },
+        {
+            "column_name": "ad_group_criterion_webpage_sample_sample_urls"
+        },
+        {
+            "column_name": "ad_group_criterion_youtube_channel_channel_id"
+        },
+        {
+            "column_name": "ad_group_criterion_custom_intent_custom_intent"
+        },
+        {
+            "column_name": "ad_group_criterion_webpage_coverage_percentage"
+        },
+        {
+            "column_name": "ad_group_criterion_custom_affinity_custom_affinity"
+        },
+        {
+            "column_name": "ad_group_criterion_custom_audience_custom_audience"
+        },
+        {
+            "column_name": "ad_group_criterion_effective_percent_cpc_bid_micros"
+        },
+        {
+            "column_name": "ad_group_criterion_effective_percent_cpc_bid_source"
+        },
+        {
+            "column_name": "ad_group_criterion_quality_info_search_predicted_ctr"
+        },
+        {
+            "column_name": "ad_group_criterion_combined_audience_combined_audience"
+        },
+        {
+            "column_name": "ad_group_criterion_quality_info_creative_quality_score"
+        },
+        {
+            "column_name": "ad_group_criterion_user_interest_user_interest_category"
+        },
+        {
+            "column_name": "ad_group_criterion_quality_info_post_click_quality_score"
+        },
+        {
+            "column_name": "ad_group_criterion_position_estimates_first_page_cpc_micros"
+        },
+        {
+            "column_name": "ad_group_criterion_position_estimates_top_of_page_cpc_micros"
+        },
+        {
+            "column_name": "ad_group_criterion_position_estimates_first_position_cpc_micros"
+        },
+        {
+            "column_name": "ad_group_criterion_mobile_app_category_mobile_app_category_cons"
+        },
+        {
+            "column_name": "ad_group_criterion_position_estimates_estimated_add_cost_at_fir"
+        },
+        {
+            "column_name": "ad_group_criterion_position_estimates_estimated_add_clicks_at_f"
+        },
+        {
+            "column_name": "_airbyte_raw_id"
+        },
+        {
+            "column_name": "_airbyte_extracted_at"
+        },
+        {
+            "column_name": "_airbyte_generation_id"
+        },
+        {
+            "column_name": "_airbyte_meta"
+        }
+    ],
+    "audience": [
+        {
+            "column_name": "audience_id"
+        },
+        {
+            "column_name": "customer_id"
+        },
+        {
+            "column_name": "audience_name"
+        },
+        {
+            "column_name": "audience_status"
+        },
+        {
+            "column_name": "audience_dimensions"
+        },
+        {
+            "column_name": "audience_description"
+        },
+        {
+            "column_name": "audience_resource_name"
+        },
+        {
+            "column_name": "audience_exclusion_dimension"
+        },
+        {
+            "column_name": "_airbyte_raw_id"
+        },
+        {
+            "column_name": "_airbyte_extracted_at"
+        },
+        {
+            "column_name": "_airbyte_generation_id"
+        },
+        {
+            "column_name": "_airbyte_meta"
+        }
+    ],
+    "campaign": [
+        {
+            "column_name": "campaign_id"
+        },
+        {
+            "column_name": "metrics_ctr"
+        },
+        {
+            "column_name": "campaign_name"
+        },
+        {
+            "column_name": "segments_date"
+        },
+        {
+            "column_name": "segments_hour"
+        },
+        {
+            "column_name": "metrics_clicks"
+        },
+        {
+            "column_name": "campaign_labels"
+        },
+        {
+            "column_name": "campaign_status"
+        },
+        {
+            "column_name": "campaign_end_date"
+        },
+        {
+            "column_name": "campaign_manual_cpm"
+        },
+        {
+            "column_name": "campaign_manual_cpv"
+        },
+        {
+            "column_name": "campaign_start_date"
+        },
+        {
+            "column_name": "metrics_average_cpc"
+        },
+        {
+            "column_name": "metrics_average_cpm"
+        },
+        {
+            "column_name": "metrics_conversions"
+        },
+        {
+            "column_name": "metrics_cost_micros"
+        },
+        {
+            "column_name": "metrics_impressions"
+        },
+        {
+            "column_name": "metrics_video_views"
+        },
+        {
+            "column_name": "metrics_average_cost"
+        },
+        {
+            "column_name": "metrics_interactions"
+        },
+        {
+            "column_name": "campaign_payment_mode"
+        },
+        {
+            "column_name": "campaign_base_campaign"
+        },
+        {
+            "column_name": "campaign_resource_name"
+        },
+        {
+            "column_name": "campaign_frequency_caps"
+        },
+        {
+            "column_name": "campaign_serving_status"
+        },
+        {
+            "column_name": "metrics_active_view_cpm"
+        },
+        {
+            "column_name": "metrics_active_view_ctr"
+        },
+        {
+            "column_name": "campaign_campaign_budget"
+        },
+        {
+            "column_name": "campaign_experiment_type"
+        },
+        {
+            "column_name": "segments_ad_network_type"
+        },
+        {
+            "column_name": "campaign_bidding_strategy"
+        },
+        {
+            "column_name": "campaign_final_url_suffix"
+        },
+        {
+            "column_name": "metrics_conversions_value"
+        },
+        {
+            "column_name": "campaign_optimization_score"
+        },
+        {
+            "column_name": "metrics_cost_per_conversion"
+        },
+        {
+            "column_name": "metrics_value_per_conversion"
+        },
+        {
+            "column_name": "campaign_budget_amount_micros"
+        },
+        {
+            "column_name": "campaign_bidding_strategy_type"
+        },
+        {
+            "column_name": "campaign_tracking_url_template"
+        },
+        {
+            "column_name": "campaign_url_custom_parameters"
+        },
+        {
+            "column_name": "metrics_active_view_impressions"
+        },
+        {
+            "column_name": "metrics_active_view_viewability"
+        },
+        {
+            "column_name": "metrics_interaction_event_types"
+        },
+        {
+            "column_name": "campaign_target_roas_target_roas"
+        },
+        {
+            "column_name": "metrics_video_quartile_p100_rate"
+        },
+        {
+            "column_name": "campaign_advertising_channel_type"
+        },
+        {
+            "column_name": "metrics_active_view_measurability"
+        },
+        {
+            "column_name": "campaign_accessible_bidding_strategy"
+        },
+        {
+            "column_name": "campaign_app_campaign_setting_app_id"
+        },
+        {
+            "column_name": "campaign_advertising_channel_sub_type"
+        },
+        {
+            "column_name": "campaign_shopping_setting_merchant_id"
+        },
+        {
+            "column_name": "campaign_target_cpa_target_cpa_micros"
+        },
+        {
+            "column_name": "campaign_hotel_setting_hotel_center_id"
+        },
+        {
+            "column_name": "campaign_shopping_setting_enable_local"
+        },
+        {
+            "column_name": "campaign_tracking_setting_tracking_url"
+        },
+        {
+            "column_name": "campaign_ad_serving_optimization_status"
+        },
+        {
+            "column_name": "campaign_app_campaign_setting_app_store"
+        },
+        {
+            "column_name": "campaign_video_brand_safety_suitability"
+        },
+        {
+            "column_name": "campaign_manual_cpc_enhanced_cpc_enabled"
+        },
+        {
+            "column_name": "campaign_target_cpa_cpc_bid_floor_micros"
+        },
+        {
+            "column_name": "campaign_dynamic_search_ads_setting_feeds"
+        },
+        {
+            "column_name": "campaign_percent_cpc_enhanced_cpc_enabled"
+        },
+        {
+            "column_name": "campaign_real_time_bidding_setting_opt_in"
+        },
+        {
+            "column_name": "campaign_target_impression_share_location"
+        },
+        {
+            "column_name": "campaign_target_roas_cpc_bid_floor_micros"
+        },
+        {
+            "column_name": "campaign_target_spend_target_spend_micros"
+        },
+        {
+            "column_name": "campaign_vanity_pharma_vanity_pharma_text"
+        },
+        {
+            "column_name": "campaign_commission_commission_rate_micros"
+        },
+        {
+            "column_name": "campaign_excluded_parent_asset_field_types"
+        },
+        {
+            "column_name": "campaign_target_cpa_cpc_bid_ceiling_micros"
+        },
+        {
+            "column_name": "metrics_active_view_measurable_cost_micros"
+        },
+        {
+            "column_name": "metrics_active_view_measurable_impressions"
+        },
+        {
+            "column_name": "campaign_percent_cpc_cpc_bid_ceiling_micros"
+        },
+        {
+            "column_name": "campaign_shopping_setting_campaign_priority"
+        },
+        {
+            "column_name": "campaign_target_roas_cpc_bid_ceiling_micros"
+        },
+        {
+            "column_name": "campaign_target_spend_cpc_bid_ceiling_micros"
+        },
+        {
+            "column_name": "campaign_maximize_conversion_value_target_roas"
+        },
+        {
+            "column_name": "campaign_network_settings_target_google_search"
+        },
+        {
+            "column_name": "campaign_targeting_setting_target_restrictions"
+        },
+        {
+            "column_name": "campaign_dynamic_search_ads_setting_domain_name"
+        },
+        {
+            "column_name": "campaign_maximize_conversions_target_cpa_micros"
+        },
+        {
+            "column_name": "campaign_network_settings_target_search_network"
+        },
+        {
+            "column_name": "campaign_network_settings_target_content_network"
+        },
+        {
+            "column_name": "campaign_dynamic_search_ads_setting_language_code"
+        },
+        {
+            "column_name": "campaign_selective_optimization_conversion_actions"
+        },
+        {
+            "column_name": "campaign_target_cpm_target_frequency_goal_time_unit"
+        },
+        {
+            "column_name": "campaign_local_campaign_setting_location_source_type"
+        },
+        {
+            "column_name": "campaign_vanity_pharma_vanity_pharma_display_url_mode"
+        },
+        {
+            "column_name": "campaign_target_cpm_target_frequency_goal_target_count"
+        },
+        {
+            "column_name": "campaign_network_settings_target_partner_search_network"
+        },
+        {
+            "column_name": "campaign_target_impression_share_cpc_bid_ceiling_micros"
+        },
+        {
+            "column_name": "campaign_app_campaign_setting_bidding_strategy_goal_type"
+        },
+        {
+            "column_name": "campaign_geo_target_type_setting_negative_geo_target_type"
+        },
+        {
+            "column_name": "campaign_geo_target_type_setting_positive_geo_target_type"
+        },
+        {
+            "column_name": "campaign_target_impression_share_location_fraction_micros"
+        },
+        {
+            "column_name": "campaign_dynamic_search_ads_setting_use_supplied_urls_only"
+        },
+        {
+            "column_name": "campaign_optimization_goal_setting_optimization_goal_types"
+        },
+        {
+            "column_name": "_airbyte_raw_id"
+        },
+        {
+            "column_name": "_airbyte_extracted_at"
+        },
+        {
+            "column_name": "_airbyte_generation_id"
+        },
+        {
+            "column_name": "_airbyte_meta"
+        }
+    ],
+    "campaign_budget": [
+        {
+            "column_name": "campaign_id"
+        },
+        {
+            "column_name": "customer_id"
+        },
+        {
+            "column_name": "metrics_ctr"
+        },
+        {
+            "column_name": "segments_date"
+        },
+        {
+            "column_name": "metrics_clicks"
+        },
+        {
+            "column_name": "campaign_budget_id"
+        },
+        {
+            "column_name": "metrics_average_cpc"
+        },
+        {
+            "column_name": "metrics_average_cpe"
+        },
+        {
+            "column_name": "metrics_average_cpm"
+        },
+        {
+            "column_name": "metrics_average_cpv"
+        },
+        {
+            "column_name": "metrics_conversions"
+        },
+        {
+            "column_name": "metrics_cost_micros"
+        },
+        {
+            "column_name": "metrics_engagements"
+        },
+        {
+            "column_name": "metrics_impressions"
+        },
+        {
+            "column_name": "metrics_video_views"
+        },
+        {
+            "column_name": "campaign_budget_name"
+        },
+        {
+            "column_name": "campaign_budget_type"
+        },
+        {
+            "column_name": "metrics_average_cost"
+        },
+        {
+            "column_name": "metrics_interactions"
+        },
+        {
+            "column_name": "campaign_budget_period"
+        },
+        {
+            "column_name": "campaign_budget_status"
+        },
+        {
+            "column_name": "metrics_all_conversions"
+        },
+        {
+            "column_name": "metrics_engagement_rate"
+        },
+        {
+            "column_name": "metrics_video_view_rate"
+        },
+        {
+            "column_name": "metrics_interaction_rate"
+        },
+        {
+            "column_name": "metrics_conversions_value"
+        },
+        {
+            "column_name": "metrics_cost_per_conversion"
+        },
+        {
+            "column_name": "metrics_value_per_conversion"
+        },
+        {
+            "column_name": "campaign_budget_amount_micros"
+        },
+        {
+            "column_name": "campaign_budget_resource_name"
+        },
+        {
+            "column_name": "metrics_all_conversions_value"
+        },
+        {
+            "column_name": "campaign_budget_delivery_method"
+        },
+        {
+            "column_name": "campaign_budget_reference_count"
+        },
+        {
+            "column_name": "metrics_interaction_event_types"
+        },
+        {
+            "column_name": "metrics_cost_per_all_conversions"
+        },
+        {
+            "column_name": "metrics_cross_device_conversions"
+        },
+        {
+            "column_name": "metrics_view_through_conversions"
+        },
+        {
+            "column_name": "campaign_budget_explicitly_shared"
+        },
+        {
+            "column_name": "metrics_value_per_all_conversions"
+        },
+        {
+            "column_name": "campaign_budget_total_amount_micros"
+        },
+        {
+            "column_name": "campaign_budget_has_recommended_budget"
+        },
+        {
+            "column_name": "metrics_conversions_from_interactions_rate"
+        },
+        {
+            "column_name": "campaign_budget_aligned_bidding_strategy_id"
+        },
+        {
+            "column_name": "metrics_all_conversions_from_interactions_rate"
+        },
+        {
+            "column_name": "campaign_budget_recommended_budget_amount_micros"
+        },
+        {
+            "column_name": "segments_budget_campaign_association_status_status"
+        },
+        {
+            "column_name": "segments_budget_campaign_association_status_campaign"
+        },
+        {
+            "column_name": "campaign_budget_recommended_budget_estimated_change_weekly_view"
+        },
+        {
+            "column_name": "campaign_budget_recommended_budget_estimated_change_weekly_clic"
+        },
+        {
+            "column_name": "campaign_budget_recommended_budget_estimated_change_weekly_cost"
+        },
+        {
+            "column_name": "campaign_budget_recommended_budget_estimated_change_weekly_inte"
+        },
+        {
+            "column_name": "_airbyte_raw_id"
+        },
+        {
+            "column_name": "_airbyte_extracted_at"
+        },
+        {
+            "column_name": "_airbyte_generation_id"
+        },
+        {
+            "column_name": "_airbyte_meta"
+        }
+    ],
+    "campaign_criterion": [
+        {
+            "column_name": "deleted_at"
+        },
+        {
+            "column_name": "campaign_id"
+        },
+        {
+            "column_name": "campaign_criterion_campaign"
+        },
+        {
+            "column_name": "campaign_criterion_negative"
+        },
+        {
+            "column_name": "campaign_criterion_resource_name"
+        },
+        {
+            "column_name": "campaign_criterion_age_range_type"
+        },
+        {
+            "column_name": "change_status_last_change_date_time"
+        },
+        {
+            "column_name": "campaign_criterion_youtube_video_video_id"
+        },
+        {
+            "column_name": "campaign_criterion_mobile_application_name"
+        },
+        {
+            "column_name": "campaign_criterion_youtube_channel_channel_id"
+        },
+        {
+            "column_name": "_airbyte_raw_id"
+        },
+        {
+            "column_name": "_airbyte_extracted_at"
+        },
+        {
+            "column_name": "_airbyte_generation_id"
+        },
+        {
+            "column_name": "_airbyte_meta"
+        }
+    ],
+    "campaign_label": [
+        {
+            "column_name": "label_id"
+        },
+        {
+            "column_name": "label_name"
+        },
+        {
+            "column_name": "campaign_id"
+        },
+        {
+            "column_name": "label_resource_name"
+        },
+        {
+            "column_name": "campaign_resource_name"
+        },
+        {
+            "column_name": "campaign_label_resource_name"
+        },
+        {
+            "column_name": "_airbyte_raw_id"
+        },
+        {
+            "column_name": "_airbyte_extracted_at"
+        },
+        {
+            "column_name": "_airbyte_generation_id"
+        },
+        {
+            "column_name": "_airbyte_meta"
+        }
+    ],
+    "click_view": [
+        {
+            "column_name": "ad_group_id"
+        },
+        {
+            "column_name": "campaign_id"
+        },
+        {
+            "column_name": "customer_id"
+        },
+        {
+            "column_name": "ad_group_name"
+        },
+        {
+            "column_name": "campaign_name"
+        },
+        {
+            "column_name": "segments_date"
+        },
+        {
+            "column_name": "click_view_gclid"
+        },
+        {
+            "column_name": "click_view_keyword"
+        },
+        {
+            "column_name": "click_view_ad_group_ad"
+        },
+        {
+            "column_name": "segments_ad_network_type"
+        },
+        {
+            "column_name": "click_view_keyword_info_text"
+        },
+        {
+            "column_name": "click_view_keyword_info_match_type"
+        },
+        {
+            "column_name": "campaign_network_settings_target_google_search"
+        },
+        {
+            "column_name": "campaign_network_settings_target_search_network"
+        },
+        {
+            "column_name": "campaign_network_settings_target_content_network"
+        },
+        {
+            "column_name": "campaign_network_settings_target_partner_search_network"
+        },
+        {
+            "column_name": "_airbyte_raw_id"
+        },
+        {
+            "column_name": "_airbyte_extracted_at"
+        },
+        {
+            "column_name": "_airbyte_generation_id"
+        },
+        {
+            "column_name": "_airbyte_meta"
+        }
+    ],
+    "customer": [
+        {
+            "column_name": "customer_id"
+        },
+        {
+            "column_name": "segments_date"
+        },
+        {
+            "column_name": "customer_manager"
+        },
+        {
+            "column_name": "customer_time_zone"
+        },
+        {
+            "column_name": "customer_test_account"
+        },
+        {
+            "column_name": "customer_currency_code"
+        },
+        {
+            "column_name": "customer_resource_name"
+        },
+        {
+            "column_name": "customer_descriptive_name"
+        },
+        {
+            "column_name": "customer_final_url_suffix"
+        },
+        {
+            "column_name": "customer_has_partners_badge"
+        },
+        {
+            "column_name": "customer_optimization_score"
+        },
+        {
+            "column_name": "customer_auto_tagging_enabled"
+        },
+        {
+            "column_name": "customer_tracking_url_template"
+        },
+        {
+            "column_name": "customer_optimization_score_weight"
+        },
+        {
+            "column_name": "customer_remarketing_setting_google_global_site_tag"
+        },
+        {
+            "column_name": "customer_call_reporting_setting_call_conversion_action"
+        },
+        {
+            "column_name": "customer_call_reporting_setting_call_reporting_enabled"
+        },
+        {
+            "column_name": "customer_pay_per_conversion_eligibility_failure_reasons"
+        },
+        {
+            "column_name": "customer_conversion_tracking_setting_conversion_tracking_id"
+        },
+        {
+            "column_name": "customer_call_reporting_setting_call_conversion_reporting_enabl"
+        },
+        {
+            "column_name": "customer_conversion_tracking_setting_cross_account_conversion_t"
+        },
+        {
+            "column_name": "_airbyte_raw_id"
+        },
+        {
+            "column_name": "_airbyte_extracted_at"
+        },
+        {
+            "column_name": "_airbyte_generation_id"
+        },
+        {
+            "column_name": "_airbyte_meta"
+        }
+    ],
+    "customer_label": [
+        {
+            "column_name": "customer_id"
+        },
+        {
+            "column_name": "customer_label_label"
+        },
+        {
+            "column_name": "customer_label_customer"
+        },
+        {
+            "column_name": "customer_label_resource_name"
+        },
+        {
+            "column_name": "_airbyte_raw_id"
+        },
+        {
+            "column_name": "_airbyte_extracted_at"
+        },
+        {
+            "column_name": "_airbyte_generation_id"
+        },
+        {
+            "column_name": "_airbyte_meta"
+        }
+    ],
+    "geographic_view": [
+        {
+            "column_name": "ad_group_id"
+        },
+        {
+            "column_name": "customer_id"
+        },
+        {
+            "column_name": "segments_date"
+        },
+        {
+            "column_name": "customer_descriptive_name"
+        },
+        {
+            "column_name": "geographic_view_location_type"
+        },
+        {
+            "column_name": "geographic_view_country_criterion_id"
+        },
+        {
+            "column_name": "_airbyte_raw_id"
+        },
+        {
+            "column_name": "_airbyte_extracted_at"
+        },
+        {
+            "column_name": "_airbyte_generation_id"
+        },
+        {
+            "column_name": "_airbyte_meta"
+        }
+    ],
+    "keyword_view": [
+        {
+            "column_name": "ad_group_id"
+        },
+        {
+            "column_name": "campaign_id"
+        },
+        {
+            "column_name": "customer_id"
+        },
+        {
+            "column_name": "metrics_ctr"
+        },
+        {
+            "column_name": "segments_date"
+        },
+        {
+            "column_name": "metrics_clicks"
+        },
+        {
+            "column_name": "metrics_conversions"
+        },
+        {
+            "column_name": "metrics_cost_micros"
+        },
+        {
+            "column_name": "metrics_impressions"
+        },
+        {
+            "column_name": "metrics_interactions"
+        },
+        {
+            "column_name": "ad_group_criterion_type"
+        },
+        {
+            "column_name": "customer_descriptive_name"
+        },
+        {
+            "column_name": "metrics_conversions_value"
+        },
+        {
+            "column_name": "ad_group_criterion_negative"
+        },
+        {
+            "column_name": "campaign_bidding_strategy_type"
+        },
+        {
+            "column_name": "ad_group_criterion_criterion_id"
+        },
+        {
+            "column_name": "ad_group_criterion_keyword_text"
+        },
+        {
+            "column_name": "metrics_active_view_impressions"
+        },
+        {
+            "column_name": "metrics_active_view_viewability"
+        },
+        {
+            "column_name": "metrics_interaction_event_types"
+        },
+        {
+            "column_name": "metrics_historical_quality_score"
+        },
+        {
+            "column_name": "metrics_view_through_conversions"
+        },
+        {
+            "column_name": "metrics_active_view_measurability"
+        },
+        {
+            "column_name": "ad_group_criterion_keyword_match_type"
+        },
+        {
+            "column_name": "metrics_active_view_measurable_cost_micros"
+        },
+        {
+            "column_name": "metrics_active_view_measurable_impressions"
+        },
+        {
+            "column_name": "_airbyte_raw_id"
+        },
+        {
+            "column_name": "_airbyte_extracted_at"
+        },
+        {
+            "column_name": "_airbyte_generation_id"
+        },
+        {
+            "column_name": "_airbyte_meta"
+        }
+    ],
+    "label": [
+        {
+            "column_name": "label_id"
+        },
+        {
+            "column_name": "label_name"
+        },
+        {
+            "column_name": "customer_id"
+        },
+        {
+            "column_name": "label_status"
+        },
+        {
+            "column_name": "label_resource_name"
+        },
+        {
+            "column_name": "label_text_label_description"
+        },
+        {
+            "column_name": "label_text_label_background_color"
+        },
+        {
+            "column_name": "_airbyte_raw_id"
+        },
+        {
+            "column_name": "_airbyte_extracted_at"
+        },
+        {
+            "column_name": "_airbyte_generation_id"
+        },
+        {
+            "column_name": "_airbyte_meta"
+        }
+    ],
+    "shopping_performance_view": [
+        {
+            "column_name": "ad_group_id"
+        },
+        {
+            "column_name": "campaign_id"
+        },
+        {
+            "column_name": "customer_id"
+        },
+        {
+            "column_name": "metrics_ctr"
+        },
+        {
+            "column_name": "ad_group_name"
+        },
+        {
+            "column_name": "campaign_name"
+        },
+        {
+            "column_name": "segments_date"
+        },
+        {
+            "column_name": "segments_week"
+        },
+        {
+            "column_name": "segments_year"
+        },
+        {
+            "column_name": "metrics_clicks"
+        },
+        {
+            "column_name": "segments_month"
+        },
+        {
+            "column_name": "ad_group_status"
+        },
+        {
+            "column_name": "campaign_status"
+        },
+        {
+            "column_name": "segments_device"
+        },
+        {
+            "column_name": "segments_quarter"
+        },
+        {
+            "column_name": "metrics_average_cpc"
+        },
+        {
+            "column_name": "metrics_conversions"
+        },
+        {
+            "column_name": "metrics_cost_micros"
+        },
+        {
+            "column_name": "metrics_impressions"
+        },
+        {
+            "column_name": "segments_click_type"
+        },
+        {
+            "column_name": "segments_day_of_week"
+        },
+        {
+            "column_name": "segments_product_brand"
+        },
+        {
+            "column_name": "segments_product_title"
+        },
+        {
+            "column_name": "metrics_all_conversions"
+        },
+        {
+            "column_name": "segments_ad_network_type"
+        },
+        {
+            "column_name": "segments_product_channel"
+        },
+        {
+            "column_name": "segments_product_country"
+        },
+        {
+            "column_name": "segments_product_item_id"
+        },
+        {
+            "column_name": "segments_product_type_l1"
+        },
+        {
+            "column_name": "segments_product_type_l2"
+        },
+        {
+            "column_name": "segments_product_type_l3"
+        },
+        {
+            "column_name": "segments_product_type_l4"
+        },
+        {
+            "column_name": "segments_product_type_l5"
+        },
+        {
+            "column_name": "customer_descriptive_name"
+        },
+        {
+            "column_name": "metrics_conversions_value"
+        },
+        {
+            "column_name": "segments_product_language"
+        },
+        {
+            "column_name": "segments_product_store_id"
+        },
+        {
+            "column_name": "segments_product_condition"
+        },
+        {
+            "column_name": "metrics_cost_per_conversion"
+        },
+        {
+            "column_name": "metrics_value_per_conversion"
+        },
+        {
+            "column_name": "segments_product_merchant_id"
+        },
+        {
+            "column_name": "metrics_all_conversions_value"
+        },
+        {
+            "column_name": "segments_product_aggregator_id"
+        },
+        {
+            "column_name": "metrics_cost_per_all_conversions"
+        },
+        {
+            "column_name": "metrics_cross_device_conversions"
+        },
+        {
+            "column_name": "segments_product_category_level1"
+        },
+        {
+            "column_name": "segments_product_category_level2"
+        },
+        {
+            "column_name": "segments_product_category_level3"
+        },
+        {
+            "column_name": "segments_product_category_level4"
+        },
+        {
+            "column_name": "segments_product_category_level5"
+        },
+        {
+            "column_name": "metrics_value_per_all_conversions"
+        },
+        {
+            "column_name": "segments_product_custom_attribute0"
+        },
+        {
+            "column_name": "segments_product_custom_attribute1"
+        },
+        {
+            "column_name": "segments_product_custom_attribute2"
+        },
+        {
+            "column_name": "segments_product_custom_attribute3"
+        },
+        {
+            "column_name": "segments_product_custom_attribute4"
+        },
+        {
+            "column_name": "segments_product_channel_exclusivity"
+        },
+        {
+            "column_name": "metrics_conversions_from_interactions_rate"
+        },
+        {
+            "column_name": "metrics_all_conversions_from_interactions_rate"
+        },
+        {
+            "column_name": "_airbyte_raw_id"
+        },
+        {
+            "column_name": "_airbyte_extracted_at"
+        },
+        {
+            "column_name": "_airbyte_generation_id"
+        },
+        {
+            "column_name": "_airbyte_meta"
+        }
+    ],
+    "topic_view": [
+        {
+            "column_name": "ad_group_id"
+        },
+        {
+            "column_name": "campaign_id"
+        },
+        {
+            "column_name": "customer_id"
+        },
+        {
+            "column_name": "metrics_ctr"
+        },
+        {
+            "column_name": "ad_group_name"
+        },
+        {
+            "column_name": "campaign_name"
+        },
+        {
+            "column_name": "segments_date"
+        },
+        {
+            "column_name": "segments_week"
+        },
+        {
+            "column_name": "segments_year"
+        },
+        {
+            "column_name": "metrics_clicks"
+        },
+        {
+            "column_name": "segments_month"
+        },
+        {
+            "column_name": "ad_group_status"
+        },
+        {
+            "column_name": "campaign_status"
+        },
+        {
+            "column_name": "segments_device"
+        },
+        {
+            "column_name": "segments_quarter"
+        },
+        {
+            "column_name": "customer_time_zone"
+        },
+        {
+            "column_name": "metrics_average_cpc"
+        },
+        {
+            "column_name": "metrics_average_cpe"
+        },
+        {
+            "column_name": "metrics_average_cpm"
+        },
+        {
+            "column_name": "metrics_average_cpv"
+        },
+        {
+            "column_name": "metrics_conversions"
+        },
+        {
+            "column_name": "metrics_cost_micros"
+        },
+        {
+            "column_name": "metrics_engagements"
+        },
+        {
+            "column_name": "metrics_gmail_saves"
+        },
+        {
+            "column_name": "metrics_impressions"
+        },
+        {
+            "column_name": "metrics_video_views"
+        },
+        {
+            "column_name": "metrics_average_cost"
+        },
+        {
+            "column_name": "metrics_interactions"
+        },
+        {
+            "column_name": "segments_day_of_week"
+        },
+        {
+            "column_name": "ad_group_base_ad_group"
+        },
+        {
+            "column_name": "campaign_base_campaign"
+        },
+        {
+            "column_name": "customer_currency_code"
+        },
+        {
+            "column_name": "metrics_gmail_forwards"
+        },
+        {
+            "column_name": "metrics_active_view_cpm"
+        },
+        {
+            "column_name": "metrics_active_view_ctr"
+        },
+        {
+            "column_name": "metrics_all_conversions"
+        },
+        {
+            "column_name": "metrics_engagement_rate"
+        },
+        {
+            "column_name": "metrics_video_view_rate"
+        },
+        {
+            "column_name": "metrics_interaction_rate"
+        },
+        {
+            "column_name": "segments_ad_network_type"
+        },
+        {
+            "column_name": "topic_view_resource_name"
+        },
+        {
+            "column_name": "ad_group_criterion_status"
+        },
+        {
+            "column_name": "campaign_bidding_strategy"
+        },
+        {
+            "column_name": "customer_descriptive_name"
+        },
+        {
+            "column_name": "metrics_conversions_value"
+        },
+        {
+            "column_name": "ad_group_criterion_negative"
+        },
+        {
+            "column_name": "metrics_cost_per_conversion"
+        },
+        {
+            "column_name": "metrics_value_per_conversion"
+        },
+        {
+            "column_name": "ad_group_criterion_final_urls"
+        },
+        {
+            "column_name": "ad_group_criterion_topic_path"
+        },
+        {
+            "column_name": "metrics_all_conversions_value"
+        },
+        {
+            "column_name": "campaign_bidding_strategy_type"
+        },
+        {
+            "column_name": "metrics_gmail_secondary_clicks"
+        },
+        {
+            "column_name": "ad_group_criterion_bid_modifier"
+        },
+        {
+            "column_name": "ad_group_criterion_criterion_id"
+        },
+        {
+            "column_name": "metrics_active_view_impressions"
+        },
+        {
+            "column_name": "metrics_active_view_viewability"
+        },
+        {
+            "column_name": "metrics_interaction_event_types"
+        },
+        {
+            "column_name": "metrics_video_quartile_p25_rate"
+        },
+        {
+            "column_name": "metrics_video_quartile_p50_rate"
+        },
+        {
+            "column_name": "metrics_video_quartile_p75_rate"
+        },
+        {
+            "column_name": "metrics_cost_per_all_conversions"
+        },
+        {
+            "column_name": "metrics_cross_device_conversions"
+        },
+        {
+            "column_name": "metrics_video_quartile_p100_rate"
+        },
+        {
+            "column_name": "metrics_view_through_conversions"
+        },
+        {
+            "column_name": "metrics_active_view_measurability"
+        },
+        {
+            "column_name": "metrics_value_per_all_conversions"
+        },
+        {
+            "column_name": "ad_group_criterion_final_mobile_urls"
+        },
+        {
+            "column_name": "ad_group_criterion_topic_topic_constant"
+        },
+        {
+            "column_name": "ad_group_criterion_tracking_url_template"
+        },
+        {
+            "column_name": "ad_group_criterion_url_custom_parameters"
+        },
+        {
+            "column_name": "metrics_active_view_measurable_cost_micros"
+        },
+        {
+            "column_name": "metrics_active_view_measurable_impressions"
+        },
+        {
+            "column_name": "metrics_conversions_from_interactions_rate"
+        },
+        {
+            "column_name": "ad_group_criterion_effective_cpc_bid_micros"
+        },
+        {
+            "column_name": "ad_group_criterion_effective_cpc_bid_source"
+        },
+        {
+            "column_name": "ad_group_criterion_effective_cpm_bid_micros"
+        },
+        {
+            "column_name": "ad_group_criterion_effective_cpm_bid_source"
+        },
+        {
+            "column_name": "ad_group_targeting_setting_target_restrictions"
+        },
+        {
+            "column_name": "metrics_all_conversions_from_interactions_rate"
+        },
+        {
+            "column_name": "_airbyte_raw_id"
+        },
+        {
+            "column_name": "_airbyte_extracted_at"
+        },
+        {
+            "column_name": "_airbyte_generation_id"
+        },
+        {
+            "column_name": "_airbyte_meta"
+        }
+    ],
+    "user_interest": [
+        {
+            "column_name": "user_interest_name"
+        },
+        {
+            "column_name": "user_interest_resource_name"
+        },
+        {
+            "column_name": "user_interest_taxonomy_type"
+        },
+        {
+            "column_name": "user_interest_availabilities"
+        },
+        {
+            "column_name": "user_interest_launched_to_all"
+        },
+        {
+            "column_name": "user_interest_user_interest_id"
+        },
+        {
+            "column_name": "user_interest_user_interest_parent"
+        },
+        {
+            "column_name": "_airbyte_raw_id"
+        },
+        {
+            "column_name": "_airbyte_extracted_at"
+        },
+        {
+            "column_name": "_airbyte_generation_id"
+        },
+        {
+            "column_name": "_airbyte_meta"
+        }
+    ],
+    "user_location_view": [
+        {
+            "column_name": "campaign_id"
+        },
+        {
+            "column_name": "customer_id"
+        },
+        {
+            "column_name": "metrics_ctr"
+        },
+        {
+            "column_name": "ad_group_name"
+        },
+        {
+            "column_name": "campaign_name"
+        },
+        {
+            "column_name": "segments_date"
+        },
+        {
+            "column_name": "segments_week"
+        },
+        {
+            "column_name": "segments_year"
+        },
+        {
+            "column_name": "metrics_clicks"
+        },
+        {
+            "column_name": "segments_month"
+        },
+        {
+            "column_name": "ad_group_status"
+        },
+        {
+            "column_name": "campaign_status"
+        },
+        {
+            "column_name": "segments_quarter"
+        },
+        {
+            "column_name": "customer_time_zone"
+        },
+        {
+            "column_name": "metrics_average_cpc"
+        },
+        {
+            "column_name": "metrics_average_cpm"
+        },
+        {
+            "column_name": "metrics_average_cpv"
+        },
+        {
+            "column_name": "metrics_conversions"
+        },
+        {
+            "column_name": "metrics_cost_micros"
+        },
+        {
+            "column_name": "metrics_impressions"
+        },
+        {
+            "column_name": "metrics_video_views"
+        },
+        {
+            "column_name": "metrics_average_cost"
+        },
+        {
+            "column_name": "metrics_interactions"
+        },
+        {
+            "column_name": "segments_day_of_week"
+        },
+        {
+            "column_name": "ad_group_base_ad_group"
+        },
+        {
+            "column_name": "campaign_base_campaign"
+        },
+        {
+            "column_name": "customer_currency_code"
+        },
+        {
+            "column_name": "metrics_all_conversions"
+        },
+        {
+            "column_name": "metrics_video_view_rate"
+        },
+        {
+            "column_name": "metrics_interaction_rate"
+        },
+        {
+            "column_name": "segments_ad_network_type"
+        },
+        {
+            "column_name": "customer_descriptive_name"
+        },
+        {
+            "column_name": "metrics_conversions_value"
+        },
+        {
+            "column_name": "metrics_cost_per_conversion"
+        },
+        {
+            "column_name": "metrics_value_per_conversion"
+        },
+        {
+            "column_name": "metrics_all_conversions_value"
+        },
+        {
+            "column_name": "metrics_interaction_event_types"
+        },
+        {
+            "column_name": "metrics_cost_per_all_conversions"
+        },
+        {
+            "column_name": "metrics_cross_device_conversions"
+        },
+        {
+            "column_name": "metrics_view_through_conversions"
+        },
+        {
+            "column_name": "user_location_view_resource_name"
+        },
+        {
+            "column_name": "metrics_value_per_all_conversions"
+        },
+        {
+            "column_name": "user_location_view_targeting_location"
+        },
+        {
+            "column_name": "user_location_view_country_criterion_id"
+        },
+        {
+            "column_name": "metrics_conversions_from_interactions_rate"
+        },
+        {
+            "column_name": "metrics_all_conversions_from_interactions_rate"
+        },
+        {
+            "column_name": "_airbyte_raw_id"
+        },
+        {
+            "column_name": "_airbyte_extracted_at"
+        },
+        {
+            "column_name": "_airbyte_generation_id"
+        },
+        {
+            "column_name": "_airbyte_meta"
+        }
+    ],
+    "ad_group_ad_legacy": [
+        {
+            "column_name": "ad_group_id"
+        },
+        {
+            "column_name": "campaign_id"
+        },
+        {
+            "column_name": "customer_id"
+        },
+        {
+            "column_name": "metrics_ctr"
+        },
+        {
+            "column_name": "ad_group_name"
+        },
+        {
+            "column_name": "campaign_name"
+        },
+        {
+            "column_name": "segments_date"
+        },
+        {
+            "column_name": "segments_week"
+        },
+        {
+            "column_name": "segments_year"
+        },
+        {
+            "column_name": "metrics_clicks"
+        },
+        {
+            "column_name": "segments_month"
+        },
+        {
+            "column_name": "ad_group_status"
+        },
+        {
+            "column_name": "campaign_status"
+        },
+        {
+            "column_name": "segments_quarter"
+        },
+        {
+            "column_name": "ad_group_ad_ad_id"
+        },
+        {
+            "column_name": "ad_group_ad_status"
+        },
+        {
+            "column_name": "customer_time_zone"
+        },
+        {
+            "column_name": "ad_group_ad_ad_type"
+        },
+        {
+            "column_name": "metrics_average_cpc"
+        },
+        {
+            "column_name": "metrics_average_cpe"
+        },
+        {
+            "column_name": "metrics_average_cpm"
+        },
+        {
+            "column_name": "metrics_average_cpv"
+        },
+        {
+            "column_name": "metrics_bounce_rate"
+        },
+        {
+            "column_name": "metrics_conversions"
+        },
+        {
+            "column_name": "metrics_cost_micros"
+        },
+        {
+            "column_name": "metrics_engagements"
+        },
+        {
+            "column_name": "metrics_gmail_saves"
+        },
+        {
+            "column_name": "metrics_impressions"
+        },
+        {
+            "column_name": "metrics_video_views"
+        },
+        {
+            "column_name": "ad_group_ad_ad_group"
+        },
+        {
+            "column_name": "metrics_average_cost"
+        },
+        {
+            "column_name": "metrics_interactions"
+        },
+        {
+            "column_name": "segments_day_of_week"
+        },
+        {
+            "column_name": "ad_group_base_ad_group"
+        },
+        {
+            "column_name": "campaign_base_campaign"
+        },
+        {
+            "column_name": "customer_currency_code"
+        },
+        {
+            "column_name": "metrics_gmail_forwards"
+        },
+        {
+            "column_name": "ad_group_ad_ad_strength"
+        },
+        {
+            "column_name": "metrics_active_view_cpm"
+        },
+        {
+            "column_name": "metrics_active_view_ctr"
+        },
+        {
+            "column_name": "metrics_all_conversions"
+        },
+        {
+            "column_name": "metrics_engagement_rate"
+        },
+        {
+            "column_name": "metrics_video_view_rate"
+        },
+        {
+            "column_name": "metrics_interaction_rate"
+        },
+        {
+            "column_name": "segments_ad_network_type"
+        },
+        {
+            "column_name": "ad_group_ad_ad_final_urls"
+        },
+        {
+            "column_name": "customer_descriptive_name"
+        },
+        {
+            "column_name": "metrics_conversions_value"
+        },
+        {
+            "column_name": "ad_group_ad_ad_display_url"
+        },
+        {
+            "column_name": "metrics_average_page_views"
+        },
+        {
+            "column_name": "metrics_cost_per_conversion"
+        },
+        {
+            "column_name": "ad_group_ad_ad_app_ad_images"
+        },
+        {
+            "column_name": "ad_group_ad_ad_image_ad_name"
+        },
+        {
+            "column_name": "metrics_average_time_on_site"
+        },
+        {
+            "column_name": "metrics_percent_new_visitors"
+        },
+        {
+            "column_name": "metrics_value_per_conversion"
+        },
+        {
+            "column_name": "metrics_all_conversions_value"
+        },
+        {
+            "column_name": "metrics_gmail_secondary_clicks"
+        },
+        {
+            "column_name": "ad_group_ad_ad_app_ad_headlines"
+        },
+        {
+            "column_name": "ad_group_ad_ad_text_ad_headline"
+        },
+        {
+            "column_name": "metrics_active_view_impressions"
+        },
+        {
+            "column_name": "metrics_active_view_viewability"
+        },
+        {
+            "column_name": "metrics_interaction_event_types"
+        },
+        {
+            "column_name": "metrics_video_quartile_p25_rate"
+        },
+        {
+            "column_name": "metrics_video_quartile_p50_rate"
+        },
+        {
+            "column_name": "metrics_video_quartile_p75_rate"
+        },
+        {
+            "column_name": "ad_group_ad_ad_device_preference"
+        },
+        {
+            "column_name": "ad_group_ad_ad_final_mobile_urls"
+        },
+        {
+            "column_name": "metrics_cost_per_all_conversions"
+        },
+        {
+            "column_name": "metrics_cross_device_conversions"
+        },
+        {
+            "column_name": "metrics_video_quartile_p100_rate"
+        },
+        {
+            "column_name": "metrics_view_through_conversions"
+        },
+        {
+            "column_name": "ad_group_ad_ad_image_ad_image_url"
+        },
+        {
+            "column_name": "ad_group_ad_ad_image_ad_mime_type"
+        },
+        {
+            "column_name": "metrics_active_view_measurability"
+        },
+        {
+            "column_name": "metrics_top_impression_percentage"
+        },
+        {
+            "column_name": "metrics_value_per_all_conversions"
+        },
+        {
+            "column_name": "ad_group_ad_ad_added_by_google_ads"
+        },
+        {
+            "column_name": "ad_group_ad_ad_app_ad_descriptions"
+        },
+        {
+            "column_name": "ad_group_ad_ad_image_ad_pixel_width"
+        },
+        {
+            "column_name": "ad_group_ad_ad_text_ad_description1"
+        },
+        {
+            "column_name": "ad_group_ad_ad_text_ad_description2"
+        },
+        {
+            "column_name": "ad_group_ad_ad_app_ad_youtube_videos"
+        },
+        {
+            "column_name": "ad_group_ad_ad_image_ad_pixel_height"
+        },
+        {
+            "column_name": "ad_group_ad_ad_tracking_url_template"
+        },
+        {
+            "column_name": "ad_group_ad_ad_url_custom_parameters"
+        },
+        {
+            "column_name": "ad_group_ad_ad_expanded_text_ad_path1"
+        },
+        {
+            "column_name": "ad_group_ad_ad_expanded_text_ad_path2"
+        },
+        {
+            "column_name": "ad_group_ad_ad_app_ad_mandatory_ad_text"
+        },
+        {
+            "column_name": "ad_group_ad_ad_app_ad_html5_media_bundles"
+        },
+        {
+            "column_name": "ad_group_ad_ad_responsive_search_ad_path1"
+        },
+        {
+            "column_name": "ad_group_ad_ad_responsive_search_ad_path2"
+        },
+        {
+            "column_name": "ad_group_ad_policy_summary_approval_status"
+        },
+        {
+            "column_name": "metrics_active_view_measurable_cost_micros"
+        },
+        {
+            "column_name": "metrics_active_view_measurable_impressions"
+        },
+        {
+            "column_name": "metrics_conversions_from_interactions_rate"
+        },
+        {
+            "column_name": "ad_group_ad_ad_expanded_text_ad_description"
+        },
+        {
+            "column_name": "ad_group_ad_ad_expanded_text_ad_description2"
+        },
+        {
+            "column_name": "metrics_current_model_attributed_conversions"
+        },
+        {
+            "column_name": "ad_group_ad_ad_responsive_search_ad_headlines"
+        },
+        {
+            "column_name": "ad_group_ad_ad_system_managed_resource_source"
+        },
+        {
+            "column_name": "ad_group_ad_ad_expanded_text_ad_headline_part1"
+        },
+        {
+            "column_name": "ad_group_ad_ad_expanded_text_ad_headline_part2"
+        },
+        {
+            "column_name": "ad_group_ad_ad_expanded_text_ad_headline_part3"
+        },
+        {
+            "column_name": "ad_group_ad_ad_responsive_display_ad_headlines"
+        },
+        {
+            "column_name": "metrics_all_conversions_from_interactions_rate"
+        },
+        {
+            "column_name": "ad_group_ad_ad_responsive_display_ad_main_color"
+        },
+        {
+            "column_name": "ad_group_ad_ad_responsive_display_ad_promo_text"
+        },
+        {
+            "column_name": "ad_group_ad_ad_responsive_display_ad_logo_images"
+        },
+        {
+            "column_name": "ad_group_ad_ad_responsive_search_ad_descriptions"
+        },
+        {
+            "column_name": "ad_group_ad_ad_responsive_display_ad_accent_color"
+        },
+        {
+            "column_name": "ad_group_ad_ad_responsive_display_ad_descriptions"
+        },
+        {
+            "column_name": "ad_group_ad_ad_responsive_display_ad_price_prefix"
+        },
+        {
+            "column_name": "ad_group_ad_ad_responsive_display_ad_business_name"
+        },
+        {
+            "column_name": "ad_group_ad_ad_responsive_display_ad_long_headline"
+        },
+        {
+            "column_name": "metrics_current_model_attributed_conversions_value"
+        },
+        {
+            "column_name": "ad_group_ad_ad_responsive_display_ad_format_setting"
+        },
+        {
+            "column_name": "ad_group_ad_ad_responsive_display_ad_youtube_videos"
+        },
+        {
+            "column_name": "metrics_cost_per_current_model_attributed_conversion"
+        },
+        {
+            "column_name": "ad_group_ad_ad_expanded_dynamic_search_ad_description"
+        },
+        {
+            "column_name": "ad_group_ad_ad_responsive_display_ad_marketing_images"
+        },
+        {
+            "column_name": "metrics_value_per_current_model_attributed_conversion"
+        },
+        {
+            "column_name": "ad_group_ad_ad_legacy_responsive_display_ad_logo_image"
+        },
+        {
+            "column_name": "ad_group_ad_ad_legacy_responsive_display_ad_main_color"
+        },
+        {
+            "column_name": "ad_group_ad_ad_legacy_responsive_display_ad_promo_text"
+        },
+        {
+            "column_name": "ad_group_ad_ad_responsive_display_ad_square_logo_images"
+        },
+        {
+            "column_name": "ad_group_ad_ad_legacy_responsive_display_ad_accent_color"
+        },
+        {
+            "column_name": "ad_group_ad_ad_legacy_responsive_display_ad_price_prefix"
+        },
+        {
+            "column_name": "ad_group_ad_ad_responsive_display_ad_call_to_action_text"
+        },
+        {
+            "column_name": "ad_group_ad_ad_legacy_responsive_display_ad_business_name"
+        },
+        {
+            "column_name": "ad_group_ad_ad_legacy_responsive_display_ad_long_headline"
+        },
+        {
+            "column_name": "ad_group_ad_ad_responsive_display_ad_allow_flexible_color"
+        },
+        {
+            "column_name": "ad_group_ad_ad_legacy_responsive_display_ad_format_setting"
+        },
+        {
+            "column_name": "ad_group_ad_ad_legacy_responsive_display_ad_short_headline"
+        },
+        {
+            "column_name": "ad_group_ad_ad_legacy_responsive_display_ad_marketing_image"
+        },
+        {
+            "column_name": "ad_group_ad_ad_responsive_display_ad_square_marketing_images"
+        },
+        {
+            "column_name": "ad_group_ad_ad_legacy_responsive_display_ad_square_logo_image"
+        },
+        {
+            "column_name": "ad_group_ad_ad_legacy_responsive_display_ad_call_to_action_text"
+        },
+        {
+            "column_name": "ad_group_ad_ad_legacy_responsive_display_ad_allow_flexible_colo"
+        },
+        {
+            "column_name": "ad_group_ad_ad_legacy_responsive_display_ad_square_marketing_im"
+        },
+        {
+            "column_name": "_airbyte_raw_id"
+        },
+        {
+            "column_name": "_airbyte_extracted_at"
+        },
+        {
+            "column_name": "_airbyte_generation_id"
+        },
+        {
+            "column_name": "_airbyte_meta"
+        }
+    ],
+    "ad_group_bidding_strategy": [
+        {
+            "column_name": "ad_group_id"
+        },
+        {
+            "column_name": "segments_date"
+        },
+        {
+            "column_name": "bidding_strategy_id"
+        },
+        {
+            "column_name": "bidding_strategy_name"
+        },
+        {
+            "column_name": "bidding_strategy_type"
+        },
+        {
+            "column_name": "bidding_strategy_status"
+        },
+        {
+            "column_name": "bidding_strategy_enhanced_cpc"
+        },
+        {
+            "column_name": "bidding_strategy_currency_code"
+        },
+        {
+            "column_name": "bidding_strategy_resource_name"
+        },
+        {
+            "column_name": "bidding_strategy_campaign_count"
+        },
+        {
+            "column_name": "bidding_strategy_effective_currency_code"
+        },
+        {
+            "column_name": "bidding_strategy_target_roas_target_roas"
+        },
+        {
+            "column_name": "bidding_strategy_aligned_campaign_budget_id"
+        },
+        {
+            "column_name": "bidding_strategy_non_removed_campaign_count"
+        },
+        {
+            "column_name": "bidding_strategy_target_cpa_target_cpa_micros"
+        },
+        {
+            "column_name": "bidding_strategy_target_cpa_cpc_bid_floor_micros"
+        },
+        {
+            "column_name": "bidding_strategy_target_impression_share_location"
+        },
+        {
+            "column_name": "bidding_strategy_target_roas_cpc_bid_floor_micros"
+        },
+        {
+            "column_name": "bidding_strategy_target_spend_target_spend_micros"
+        },
+        {
+            "column_name": "bidding_strategy_target_cpa_cpc_bid_ceiling_micros"
+        },
+        {
+            "column_name": "bidding_strategy_target_roas_cpc_bid_ceiling_micros"
+        },
+        {
+            "column_name": "bidding_strategy_target_spend_cpc_bid_ceiling_micros"
+        },
+        {
+            "column_name": "bidding_strategy_maximize_conversion_value_target_roas"
+        },
+        {
+            "column_name": "bidding_strategy_maximize_conversions_target_cpa_micros"
+        },
+        {
+            "column_name": "bidding_strategy_maximize_conversions_cpc_bid_floor_micros"
+        },
+        {
+            "column_name": "bidding_strategy_maximize_conversions_cpc_bid_ceiling_micros"
+        },
+        {
+            "column_name": "bidding_strategy_maximize_conversion_value_cpc_bid_floor_micros"
+        },
+        {
+            "column_name": "bidding_strategy_target_impression_share_cpc_bid_ceiling_micros"
+        },
+        {
+            "column_name": "bidding_strategy_maximize_conversion_value_cpc_bid_ceiling_micr"
+        },
+        {
+            "column_name": "bidding_strategy_target_impression_share_location_fraction_micr"
+        },
+        {
+            "column_name": "_airbyte_raw_id"
+        },
+        {
+            "column_name": "_airbyte_extracted_at"
+        },
+        {
+            "column_name": "_airbyte_generation_id"
+        },
+        {
+            "column_name": "_airbyte_meta"
+        }
+    ]
+}
