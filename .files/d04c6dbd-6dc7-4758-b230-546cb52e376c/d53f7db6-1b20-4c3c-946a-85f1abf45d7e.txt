@@ -1,0 +1,19 @@
+**Generate Cypher:**
+1. **Analyze Request & Intent:** The user wants to identify the top-performing ads. Performance is typically measured by conversions, so we focus on that metric.
+2. **Identify Elements:** We need `Ad` nodes and their associated `AdOverallMetric` nodes to access lifetime performance data.
+3. **Construct Query & Calculation Rationale:**
+   - Matched `Ad` nodes to their `AdOverallMetric` nodes to gather overall performance data.
+   - Aggregated key metrics: clicks, impressions, conversions, cost, and conversion value using `SUM()`.
+   - Calculated performance metrics in the `RETURN` clause:
+     - `overallCTR` as `toFloat(totalClicks) / totalImpressions`.
+     - `overallCPC` as `toFloat(totalCostMicros) / totalClicks`.
+     - `costPerConversion` as `toFloat(totalCostMicros) / totalConversions`.
+     - `ROAS` as `totalConvValue / totalCostMicros`.
+   - Used `CASE` statements to handle division by zero.
+   - Ordered results by `totalConversions` in descending order to identify top performers.
+   - Limited results to the top 5 ads for a concise overview.
+
+---
+
+**Generate Insight:**
+The analysis focused on key performance indicators such as CTR, CPC, and Cost Per Conversion to determine the top-performing ads. Ad ID 667867296423 emerged as the leader due to its superior CTR and cost metrics, despite all ads showing a ROAS of 0, indicating no recorded conversion value. The insights were structured to highlight the most efficient ad in terms of engagement and cost, addressing the user's query about top-performing ads.
