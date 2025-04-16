@@ -2,6 +2,9 @@ import asyncio
 import json
 from typing import Dict, Any, AsyncIterator, List, Union
 from langchain_core.exceptions import OutputParserException
+# Import neo4j time types and standard datetime
+from neo4j.time import Date, DateTime, Time 
+from datetime import date, datetime, time
 
 from langchain_core.tracers.log_stream import RunLogPatch
 
@@ -29,6 +32,22 @@ class InsightWorkflow:
                 raise FileNotFoundError(f"Schema file '{self.schema_file}' not found.")
             self._schema_content = content
         return self._schema_content
+
+    def _convert_temporal_types(self, data: List[Dict]) -> List[Dict]:
+        """Converts Neo4j temporal types in query results to ISO strings."""
+        processed_data = []
+        for record in data:
+            processed_record = {}
+            for key, value in record.items():
+                if isinstance(value, (Date, DateTime, Time, date, datetime, time)):
+                    processed_record[key] = value.isoformat()
+                # Handle nested lists (e.g., from collect())
+                elif isinstance(value, list):
+                    processed_record[key] = [item.isoformat() if isinstance(item, (Date, DateTime, Time, date, datetime, time)) else item for item in value]
+                else:
+                    processed_record[key] = value
+            processed_data.append(processed_record)
+        return processed_data
 
     async def run(self, user_query: str) -> AsyncIterator[Union[RunLogPatch, Dict[str, Any]]]:
         yield {"type": "status", "step": "insight_workflow_start", "status": "in_progress"}
@@ -136,13 +155,24 @@ class InsightWorkflow:
                  
             yield {"type": "status", "step": "execute_cypher", "status": "completed", "details": f"All {len(generated_queries)} queries executed concurrently.", "result_count": len(all_results_combined)}
 
+            # --- Step 3.5: Pre-process results for JSON serialization --- 
+            yield {"type": "status", "step": "process_results", "status": "in_progress", "details": "Converting temporal types in results..."}
+            try:
+                processed_data = self._convert_temporal_types(all_results_combined)
+                yield {"type": "status", "step": "process_results", "status": "completed", "details": "Temporal types converted."}
+            except Exception as proc_err:
+                yield {"type": "error", "step": "process_results", "message": f"Failed to process query results: {proc_err}"}
+                return
+
             # --- Step 4: Generate Insight using ainvoke --- 
             yield {"type": "status", "step": "generate_insight", "status": "in_progress", "details": "Generating insight..."}
             insight_gen_final_data = None # Initialize
             raw_llm_output = None # To store the AIMessage
             
             try:
-                insight_input = {"query": user_query, "data": all_results_combined}
+                # Use the processed data
+                insight_input = {"query": user_query, "data": processed_data} 
+                
                 # Invoke the chain, this returns the AIMessage object
                 raw_llm_output = await self.insight_generator.chain.ainvoke(insight_input)
                 
