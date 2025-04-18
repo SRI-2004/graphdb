@@ -1,0 +1,37 @@
+**Query 1:**
+```cypher
+MATCH (account:AdAccount)-[:HAS_CAMPAIGN]->(campaign:Campaign)-[:HAS_OVERALL_METRICS]->(metrics:CampaignOverallMetric)
+WITH campaign, metrics,
+  metrics.all_conversions_value_per_cost AS roas,
+  metrics.average_cpm AS cpm,
+  metrics.average_cpc AS cpc,
+  metrics.ctr AS ctr,
+  metrics.conversions AS conversions,
+  metrics.impressions AS impressions,
+  metrics.clicks AS clicks,
+  metrics.cost_micros AS cost
+WITH campaign, roas, cpm, cpc, ctr, conversions, impressions, clicks, cost,
+  (roas * 0.3 + (1 - cpm / 1000000) * 0.2 + (1 - cpc / 1000000) * 0.2 + ctr * 0.2 + conversions * 0.1) AS score
+ORDER BY score DESC
+RETURN campaign.name AS campaignName, score, roas, cpm, cpc, ctr, conversions, impressions, clicks, cost
+LIMIT 1
+```
+
+**Query 2:**
+```cypher
+MATCH (account:AdAccount)-[:HAS_CAMPAIGN]->(campaign:Campaign)-[:HAS_OVERALL_METRICS]->(metrics:CampaignOverallMetric)
+WITH campaign, metrics,
+  metrics.all_conversions_value_per_cost AS roas,
+  metrics.average_cpm AS cpm,
+  metrics.average_cpc AS cpc,
+  metrics.ctr AS ctr,
+  metrics.conversions AS conversions,
+  metrics.impressions AS impressions,
+  metrics.clicks AS clicks,
+  metrics.cost_micros AS cost
+WITH campaign, roas, cpm, cpc, ctr, conversions, impressions, clicks, cost,
+  (roas * 0.3 + (1 - cpm / 1000000) * 0.2 + (1 - cpc / 1000000) * 0.2 + ctr * 0.2 + conversions * 0.1) AS score
+ORDER BY score DESC
+RETURN campaign.name AS campaignName, score, roas, cpm, cpc, ctr, conversions, impressions, clicks, cost
+LIMIT 5
+```

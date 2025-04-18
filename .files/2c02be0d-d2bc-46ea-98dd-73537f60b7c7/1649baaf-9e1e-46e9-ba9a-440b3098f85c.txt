@@ -1,0 +1,44 @@
+**Query 1:**
+```cypher
+MATCH (aa:AdAccount)-[:HAS_CAMPAIGN]->(c:Campaign)-[:HAS_OVERALL_METRICS]->(com:CampaignOverallMetric)
+WITH c, com,
+  com.all_conversions_value_per_cost AS roas,
+  com.average_cpm AS avgCpm,
+  com.ctr AS ctr,
+  com.conversions AS conversions,
+  com.impressions AS impressions,
+  com.clicks AS clicks,
+  com.cost_micros AS costMicros
+WITH c, 
+  (CASE WHEN roas IS NOT NULL THEN roas ELSE 0 END) * 0.4 +
+  (CASE WHEN avgCpm IS NOT NULL THEN 1 / avgCpm ELSE 0 END) * 0.1 +
+  (CASE WHEN ctr IS NOT NULL THEN ctr ELSE 0 END) * 0.2 +
+  (CASE WHEN conversions IS NOT NULL THEN conversions ELSE 0 END) * 0.2 +
+  (CASE WHEN impressions IS NOT NULL THEN impressions ELSE 0 END) * 0.05 +
+  (CASE WHEN clicks IS NOT NULL THEN clicks ELSE 0 END) * 0.05 AS score
+RETURN c.name AS campaignName, score
+ORDER BY score DESC
+LIMIT 1
+```
+
+**Query 2:**
+```cypher
+MATCH (aa:AdAccount)-[:HAS_CAMPAIGN]->(c:Campaign)-[:HAS_OVERALL_METRICS]->(com:CampaignOverallMetric)
+WITH c, com,
+  com.all_conversions_value_per_cost AS roas,
+  com.average_cpm AS avgCpm,
+  com.ctr AS ctr,
+  com.conversions AS conversions,
+  com.impressions AS impressions,
+  com.clicks AS clicks,
+  com.cost_micros AS costMicros
+WITH c, 
+  (CASE WHEN roas IS NOT NULL THEN roas ELSE 0 END) * 0.4 +
+  (CASE WHEN avgCpm IS NOT NULL THEN 1 / avgCpm ELSE 0 END) * 0.1 +
+  (CASE WHEN ctr IS NOT NULL THEN ctr ELSE 0 END) * 0.2 +
+  (CASE WHEN conversions IS NOT NULL THEN conversions ELSE 0 END) * 0.2 +
+  (CASE WHEN impressions IS NOT NULL THEN impressions ELSE 0 END) * 0.05 +
+  (CASE WHEN clicks IS NOT NULL THEN clicks ELSE 0 END) * 0.05 AS score
+RETURN c.name AS campaignName, score
+ORDER BY score DESC
+```
