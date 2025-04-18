@@ -7,6 +7,7 @@ Your task is to synthesize a clear, comprehensive, insightful, and professionall
 **Context:**
 * **Original User Query:** The user asked the question provided below.
 * **Retrieved Data:** You are given the results (as a JSON string) from executing one or more Cypher queries designed to answer the user's query.
+* **Query Generation Reasoning:** You are also given the reasoning behind *how* the Cypher queries were constructed by the previous step, based on the user query and schema.
 
 **Instructions:**
 1.  **Understand the Goal:** Deeply analyze the original user query to grasp the core information need and the underlying analytical objective.
@@ -22,14 +23,14 @@ Your task is to synthesize a clear, comprehensive, insightful, and professionall
     * **Structure for Clarity:** Organize the insight logically. Use formatting elements like bullet points, bold text, and distinct sections (e.g., "Key Findings," "Trend Analysis," "Data Summary Table") to enhance readability and professionalism. **Crucially, you MUST use Markdown tables (`| Header | ... |`) as the primary format whenever the analysis involves:**
         * **Comparing Metrics:** Presenting the same metric(s) across multiple distinct items (e.g., comparing Clicks and CTR for different Campaigns, Sales across different Products, Impression Share for various Ad Groups).
         * **Displaying Multiple Metrics:** Showing several different metrics for one or more items, especially over time or categories (e.g., presenting Clicks, Cost, Conversions, and CTR for a specific Campaign; listing various attributes for different entities).
-    **This tabular format is essential for clear, structured presentation and comparison of quantitative data.** While bullet points are suitable for summarizing qualitative observations or listing distinct, non-comparative findings, **tables are the required format for presenting structured numerical data intended for comparison or multi-metric display.** Only deviate from tables if the resulting structure would be exceptionally complex and genuinely hinder understanding, but prioritize tables for the scenarios above.
+    **This tabular format is essential for clear, structured presentation and comparison of quantitative data.** While bullet points are suitable for summarizing qualitative observations or listing distinct, non-comparative findings, **tables are the required format for presenting structured numerical data intended for comparison or multi-metric display.** Only deviate from tables if the resulting structure would be exceptionally complex and genuinely hinder understanding, but prioritize tables for the scenarios above. **Crucially, if any data within a table cell contains a literal pipe character (`|`), it MUST be escaped with a backslash (`\|`) to prevent it from being interpreted as a column separator.**
     * **Maintain Analytical Tone:** Present information objectively, drawing conclusions supported directly by the provided data. Highlight statistical significance or interesting correlations if apparent.
     * **Address Data Limitations:** If the data is empty or insufficient, clearly state this and explain *why* (e.g., "No entities matched the specified criteria," "The dataset lacks the necessary time-series information to identify trends"). Do not speculate beyond the data.
     * **Do *not* simply repeat the raw data.** Transform it into a polished, analytical narrative.
     * **Ensure that no two column names in the retrieved data are the same.** If there are, rename them to be unique.
 4.  **Output Format:** Respond with a JSON object containing two keys:
     * `"insight"`: A string containing the final, professionally formatted natural language report for the user. This string may include Markdown for tables, lists, etc.
-    * `"reasoning"`: A brief (2-4 sentences) explanation of your analytical process. Describe how you analyzed the data (e.g., identified key metrics, compared values, tracked trends, structured the findings) and formulated the insight based on the user's query and the desired professional output style.
+    * `"reasoning"`: A brief (2-4 sentences) explanation of your analytical process. Describe how you analyzed the data (e.g., identified key metrics, compared values, tracked trends, structured the findings) and formulated the insight based on the user's query and the desired professional output style. **You should also consider the provided `Query Generation Reasoning` to understand the intent behind the data retrieval when explaining your analysis.** Do not simply repeat the query generation reasoning; integrate its context into *your* reasoning about the insight synthesis.
 
 **IMPORTANT:** Your entire response MUST start directly with the opening curly brace `{{` and end directly with the closing curly brace `}}`. Do NOT include the markdown code fence markers (like ```json or ```) or any other text outside the JSON object itself.
 
@@ -109,7 +110,7 @@ Your task is to synthesize a clear, comprehensive, insightful, and professionall
 """
 
 # Corrected Human Prompt:
-INSIGHT_GENERATOR_HUMAN_PROMPT = "Original User Query: {query}\n\nRetrieved Data (JSON):\n```json\n{data}\n```\n\nGenerate the insight and reasoning based on the query and data."
+INSIGHT_GENERATOR_HUMAN_PROMPT = "Original User Query: {query}\n\nRetrieved Data (JSON):\n```json\n{data}\n```\n\nReasoning for Query Generation:\n```\n{query_generation_reasoning}\n```\n\nGenerate the insight and reasoning based on the query, data, and query generation reasoning."
 
 def create_insight_generator_prompt() -> ChatPromptTemplate:
     """Creates the ChatPromptTemplate for the InsightGenerator Agent."""

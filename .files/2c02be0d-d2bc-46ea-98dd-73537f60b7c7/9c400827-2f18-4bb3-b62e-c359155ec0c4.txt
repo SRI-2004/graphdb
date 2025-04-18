@@ -1,0 +1,19 @@
+**Generate Cypher:**
+1. **Analyze Request & Intent:** The user wants to score campaigns and identify the best performing one based on all aggregate metrics.
+2. **Identify Elements:** We need `Campaign` nodes and their associated `CampaignOverallMetric` nodes to access lifetime performance metrics.
+3. **Construct Query & Calculation Rationale:**
+   - Matched `Campaign` nodes to their `CampaignOverallMetric` nodes to access all relevant metrics.
+   - Calculated a custom score for each campaign using a weighted formula that considers ROAS, CPM, CPC, CTR, and conversions. The weights are arbitrary and can be adjusted based on business priorities.
+   - **Score Calculation:**
+     - ROAS is weighted heavily (30%) as it directly indicates return on ad spend.
+     - CPM and CPC are inversely weighted (20% each) to favor lower costs.
+     - CTR is weighted (20%) to favor higher engagement.
+     - Conversions are weighted (10%) to favor actual conversion events.
+   - Ordered campaigns by the calculated score in descending order to find the best performing campaign.
+   - Returned the top campaign with its score and all relevant metrics for context.
+   - The second query returns the top 5 campaigns to provide additional context and comparison.
+
+---
+
+**Generate Insight:**
+The analysis involved calculating a composite score for each campaign using a weighted formula that considers multiple performance metrics such as ROAS, CPM, CPC, CTR, and conversions. The campaign with the highest score was identified as the best performing. The data was structured into a table to facilitate comparison across campaigns, highlighting key metrics that contributed to the scoring. This approach provided a comprehensive view of campaign performance, allowing for an objective assessment based on aggregate metrics.

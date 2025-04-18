@@ -83,10 +83,13 @@ class InsightWorkflow:
                  return
 
             generated_queries = query_gen_final_data["queries"]
+            # Extract query generation reasoning
+            query_generation_reasoning = query_gen_final_data.get("reasoning", "N/A") # Get reasoning, provide default
+            
             yield {"type": "status", "step": "generate_cypher", "status": "completed", "details": f"Generated {len(generated_queries)} Cypher query(s).", "generated_queries": generated_queries}
             # Yield reasoning directly from the ainvoke result
-            if query_gen_final_data.get("reasoning"):
-                 yield {"type": "reasoning_summary", "step": "generate_cypher", "reasoning": query_gen_final_data["reasoning"]}
+            if query_generation_reasoning != "N/A": # Yield only if reasoning exists
+                 yield {"type": "reasoning_summary", "step": "generate_cypher", "reasoning": query_generation_reasoning}
 
             # --- Step 3: Execute Cypher Queries Concurrently --- 
             yield {"type": "status", "step": "execute_cypher", "status": "in_progress", "details": f"Preparing to execute {len(generated_queries)} Cypher query(s) concurrently..."}
@@ -170,8 +173,12 @@ class InsightWorkflow:
             raw_llm_output = None # To store the AIMessage
             
             try:
-                # Use the processed data
-                insight_input = {"query": user_query, "data": processed_data} 
+                # Include query generation reasoning in the input
+                insight_input = {
+                    "query": user_query, 
+                    "data": processed_data, 
+                    "query_generation_reasoning": query_generation_reasoning
+                } 
                 
                 # Invoke the chain, this returns the AIMessage object
                 raw_llm_output = await self.insight_generator.chain.ainvoke(insight_input)
