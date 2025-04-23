@@ -34,6 +34,10 @@ async def main(query: str, schema_file: str):
         async for chunk in router.run(user_query=query):
             # Pretty print the JSON chunks
             print(json.dumps(chunk, indent=2))
+            # Check if the chunk indicates an error and break the loop
+            if isinstance(chunk, dict) and chunk.get("type") == "error":
+                print("\n--- Error detected in workflow chunk, stopping iteration ---", file=sys.stderr) # Print to stderr
+                break # Exit the loop
             # Optional: Add a small delay for better readability of the stream
             # await asyncio.sleep(0.05)
 
