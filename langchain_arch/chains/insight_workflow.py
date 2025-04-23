@@ -173,6 +173,7 @@ class InsightWorkflow:
             raw_llm_output = None # To store the AIMessage
             
             try:
+            
                 # Include query generation reasoning in the input
                 insight_input = {
                     "query": user_query, 

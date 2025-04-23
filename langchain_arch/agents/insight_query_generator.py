@@ -1,12 +1,14 @@
 import os
 import json
-from typing import Dict, Any, AsyncIterator
+import re
+from typing import Dict, Any, AsyncIterator, Union
 
 from langchain_openai import ChatOpenAI
 from langchain_core.runnables import RunnableConfig, RunnablePassthrough
 from langchain_core.output_parsers import JsonOutputParser
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.tracers.log_stream import LogEntry
+from langchain_core.messages import BaseMessage
 
 from ..prompts.insight_query_generator import create_insight_query_generator_prompt
 
