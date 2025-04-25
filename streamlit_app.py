@@ -26,12 +26,17 @@ except ImportError:
     st.error(f"Failed to import Router from langchain_arch.chains.router. Ensure the path '{project_root}' is correct and the module exists.")
     st.stop() # Stop execution if Router can't be imported
 
-# Load .env file
-dotenv_path = os.path.join(project_root, '.env')
-if not os.path.exists(dotenv_path):
-    st.error(f".env file not found at {dotenv_path}. Please create one with your API keys and Neo4j credentials.")
-    st.stop()
-load_dotenv(dotenv_path=dotenv_path)
+# Load .env file using default search path
+# dotenv_path = os.path.join(project_root, '.env')
+# if not os.path.exists(dotenv_path):
+#     st.error(f".env file not found at {dotenv_path}. Please create one with your API keys and Neo4j credentials.")
+#     st.stop()
+# load_dotenv(dotenv_path=dotenv_path)
+found_dotenv = load_dotenv() # Call without path, checks current/parent dirs
+if not found_dotenv:
+    st.warning(".env file not found in standard locations. Ensure it exists or env vars are set externally.")
+    # Decide if this should be fatal or just a warning
+    # st.stop() # Option: Make it fatal if .env is absolutely required
 
 # Schema File Path (relative to project root)
 SCHEMA_FILE_DEFAULT = "neo4j_schema.md"
