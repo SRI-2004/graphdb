@@ -26,15 +26,11 @@ except ImportError:
     st.error(f"Failed to import Router from langchain_arch.chains.router. Ensure the path '{project_root}' is correct and the module exists.")
     st.stop() # Stop execution if Router can't be imported
 
-# Load .env file using default search path
-# dotenv_path = os.path.join(project_root, '.env')
-# if not os.path.exists(dotenv_path):
-#     st.error(f".env file not found at {dotenv_path}. Please create one with your API keys and Neo4j credentials.")
-#     st.stop()
-# load_dotenv(dotenv_path=dotenv_path)
-found_dotenv = load_dotenv() # Call without path, checks current/parent dirs
-if not found_dotenv:
-    st.warning(".env file not found in standard locations. Ensure it exists or env vars are set externally.")
+# Load .env file using default search path - REMOVED FOR DEPLOYMENT
+# Environment variables should be set directly in the deployment environment (e.g., Render dashboard)
+# found_dotenv = load_dotenv() # Call without path, checks current/parent dirs
+# if not found_dotenv:
+#     st.warning(".env file not found in standard locations. Ensure it exists or env vars are set externally.")
     # Decide if this should be fatal or just a warning
     # st.stop() # Option: Make it fatal if .env is absolutely required
 
@@ -83,7 +79,10 @@ async def execute_neo4j_query(driver, query: str, database: str = "neo4j"):
 
 # --- Streamlit App ---
 
+# Set page config FIRST
 st.set_page_config(page_title="Insight Assistant", layout="wide")
+
+# Then set the title
 st.title("💡 Insight Assistant")
 
 # --- Initialize Session State ---
