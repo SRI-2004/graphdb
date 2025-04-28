@@ -12,33 +12,37 @@ from typing import Dict, List, Any # Add typing imports
 
 # --- Setup: Paths and Environment --- 
 
-# Assume backend is run from the workspace root OR fastapi-backend dir
+# Define project root (one level up from this file) primarily for sys.path and schema location
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+# Add project root to sys.path to allow importing langchain_arch
 if project_root not in sys.path:
     sys.path.insert(0, project_root)
 
-# Load .env file from the project root (../)
-# Ensure your .env file is in the graphdb directory
-dotenv_path = os.path.join(project_root, '.env')
-found_dotenv = load_dotenv(dotenv_path=dotenv_path)
-if not found_dotenv:
-    print(f"WARNING: .env file not found at {dotenv_path}. Ensure environment variables are set.")
+# Attempt to load .env file specifically from the CURRENT directory (fastapi-backend)
+# This is mainly for local development when running from within fastapi-backend.
+# override=False ensures Render's environment variables take precedence.
+dotenv_path_local = os.path.join(os.path.dirname(__file__), '.env') 
+load_dotenv(dotenv_path=dotenv_path_local, verbose=False, override=False)
 
 # --- Configuration & Validation --- 
 
-# Validate environment variables
+# Validate environment variables ARE SET (critical check)
+# This check works using os.getenv, which checks the actual environment first,
+# then potentially values loaded from .env (if override=False was used).
 required_env_vars = ["OPENAI_API_KEY", "NEO4J_URI", "NEO4J_USERNAME", "NEO4J_PASSWORD"]
 missing_vars = [var for var in required_env_vars if not os.getenv(var)]
 if missing_vars:
-    print(f"ERROR: Missing environment variables: {', '.join(missing_vars)}. Set them in {dotenv_path} or system environment.")
+    print(f"ERROR: Missing required environment variables: {', '.join(missing_vars)}. Ensure they are set in the execution environment (e.g., Render service config) or a local .env file.")
     sys.exit(1) # Exit if critical env vars are missing
 
+# These will now correctly use Render's env vars first
 NEO4J_URI = os.getenv("NEO4J_URI")
 NEO4J_USERNAME = os.getenv("NEO4J_USERNAME")
 NEO4J_PASSWORD = os.getenv("NEO4J_PASSWORD")
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY") # Get API key
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
-# Schema File Path (relative to project root)
+# Schema File Path (relative to project root - graphdb/)
+# This uses the correctly calculated project_root path
 SCHEMA_FILE_DEFAULT = "neo4j_schema.md"
 schema_path_abs = os.path.abspath(os.path.join(project_root, SCHEMA_FILE_DEFAULT))
 if not os.path.exists(schema_path_abs):
@@ -91,17 +95,28 @@ except ImportError as e:
 async def startup_event():
     """Initialize Neo4j Driver, LLM, and LangChain Router on application startup."""
     print("Initializing Neo4j driver...")
+    neo4j_uri = os.getenv("NEO4J_URI") # Get URI again for logging
+    print(f"Attempting to connect to Neo4j at: {neo4j_uri}") # Log the URI being used
     try:
         app_state["neo4j_driver"] = AsyncGraphDatabase.driver(
-            NEO4J_URI,
+            NEO4J_URI, # Use the variable loaded earlier
             auth=(NEO4J_USERNAME, NEO4J_PASSWORD)
         )
-        await app_state["neo4j_driver"].verify_connectivity()
-        print("Neo4j driver initialized successfully.")
+        # Add a specific timeout to verify_connectivity if desired (e.g., 10 seconds)
+        # await asyncio.wait_for(app_state["neo4j_driver"].verify_connectivity(), timeout=10.0)
+        await app_state["neo4j_driver"].verify_connectivity() # Verify connection
+        print("Neo4j driver initialized and connection verified successfully.")
     except Exception as e:
-        print(f"FATAL: Failed to initialize Neo4j Driver: {e}")
-        # Decide if the app should proceed without the driver
-        # sys.exit(1) # Or just log the error and let endpoints handle the missing driver
+        # Log the specific exception type and message
+        print(f"FATAL: Failed to initialize or verify Neo4j Driver connection to {neo4j_uri}.")
+        print(f"Error Type: {type(e).__name__}")
+        print(f"Error Details: {e}")
+        # Optionally log traceback for more detail if needed during debugging
+        # import traceback
+        # traceback.print_exc()
+        app_state["neo4j_driver"] = None # Ensure driver state is None if failed
+        # Consider if the app should exit or continue degraded
+        # sys.exit(1)
 
     print("Initializing LLM...")
     try:
@@ -462,6 +477,6 @@ async def websocket_chat(websocket: WebSocket):
 if __name__ == "__main__":
     print(f"Starting Uvicorn server...")
     print(f"Project Root: {project_root}")
-    print(f"Looking for .env at: {dotenv_path}")
+    print(f"Looking for .env at: {dotenv_path_local}")
     print(f"Looking for schema at: {schema_path_abs}")
     uvicorn.run("main:app", host="0.0.0.0", port=8050, reload=True) 
