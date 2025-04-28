@@ -44,7 +44,7 @@ interface WebSocketMessage {
     requires_execution?: boolean; // Added for workflows that might not need query execution
 }
 
-const WEBSOCKET_URL = 'ws://localhost:8000/api/v1/chat/stream'; // Ensure this matches your FastAPI backend
+const WEBSOCKET_URL = 'ws://localhost:8050/api/v1/chat/stream'; // Ensure this matches your FastAPI backend
 
 export function useChat() {
   // Main chat history (including milestones)
@@ -160,28 +160,7 @@ export function useChat() {
             step: step
           }]);
           
-          // Update graph suggestions state if provided with insight message
-          // Note: The primary source should be the 'graph_suggestions' message type now
-          // setGraphSuggestions(insightSuggestions); // Comment out or remove - let graph_suggestions message handle it
 
-          // --- REMOVE WORKAROUND --- 
-          /*
-          if (insightSuggestions.length > 0) {
-              const firstSuggestionObjective = insightSuggestions[0].objective;
-              if (firstSuggestionObjective) {
-                  setQueryResults(prev => [
-                      ...prev,
-                      {
-                          objective: firstSuggestionObjective,
-                          query: "(Query not directly available from insight message)", 
-                          dataframe: undefined, 
-                          error: undefined
-                      }
-                  ]);
-              }
-          }
-          */
-          // --- END REMOVAL --- 
 
           setCurrentStatus(null); 
           setIsProcessing(false);

@@ -62,7 +62,7 @@ app = FastAPI(title="Insight Assistant Backend")
 # Allows the Next.js frontend (running on a different port) to communicate with the API
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"], # Allow your Next.js frontend origin
+    allow_origins=["*"], # Allow your Next.js frontend origin
     allow_credentials=True,
     allow_methods=["*"], # Allow all methods (GET, POST, etc.)
     allow_headers=["*"], # Allow all headers
@@ -464,4 +464,4 @@ if __name__ == "__main__":
     print(f"Project Root: {project_root}")
     print(f"Looking for .env at: {dotenv_path}")
     print(f"Looking for schema at: {schema_path_abs}")
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True) 
+    uvicorn.run("main:app", host="0.0.0.0", port=8050, reload=True) 
