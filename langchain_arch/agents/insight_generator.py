@@ -39,6 +39,7 @@ class InsightGeneratorAgent:
             )
             | self.prompt
             | self.llm
+            | self.output_parser
         )
 
 # Example usage (for testing - requires .env)

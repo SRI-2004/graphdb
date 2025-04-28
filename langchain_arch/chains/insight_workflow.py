@@ -7,10 +7,12 @@ from neo4j.time import Date, DateTime, Time
 from datetime import date, datetime, time
 
 from langchain_core.tracers.log_stream import RunLogPatch
+from langchain_openai import ChatOpenAI
 
 from ..agents.insight_query_generator import InsightQueryGeneratorAgent
 from ..agents.insight_generator import InsightGeneratorAgent
 from ..utils.neo4j_utils import Neo4jDatabase
+import os
 
 class InsightWorkflow:
     """
@@ -18,20 +20,32 @@ class InsightWorkflow:
     Yields RunLogPatch chunks from agents and custom status/error dicts.
     Gets final agent results via separate ainvoke calls after streaming.
     """
-    def __init__(self, neo4j_db: Neo4jDatabase, schema_file: str = "neo4j_schema.md"):
-        self.query_generator = InsightQueryGeneratorAgent()
-        self.insight_generator = InsightGeneratorAgent()
-        self.neo4j_db = neo4j_db # Passed from Router
+    def __init__(self, neo4j_db: Neo4jDatabase, schema_file: str):
+        # Store DB connection and schema file path (may not be strictly needed anymore if agent loads schema)
+        self.neo4j_db = neo4j_db
         self.schema_file = schema_file
-        self._schema_content = None
+        # self._schema_content = None # Removed as schema loading is likely internal to agent
 
+        # Initialize the agent needed for this workflow.
+        # The agent likely initializes its own LLM and loads schema internally.
+        try:
+            self.insight_query_gen_agent = InsightQueryGeneratorAgent()
+            # TODO: Verify if InsightQueryGeneratorAgent needs any arguments.
+        except Exception as e:
+             # Handle initialization error appropriately
+             print(f"CRITICAL: Failed to initialize InsightQueryGeneratorAgent in InsightWorkflow: {e}")
+             raise RuntimeError(f"Failed to initialize agent: {e}") from e
+
+    # Put schema loading back, it's needed for the agent's chain input
     def _load_schema(self) -> str:
-        if self._schema_content is None:
-            content = self.neo4j_db.get_schema_markdown(self.schema_file)
-            if content is None:
-                raise FileNotFoundError(f"Schema file '{self.schema_file}' not found.")
-            self._schema_content = content
-        return self._schema_content
+        """Loads schema content using the provided Neo4jDatabase instance."""
+        # Use the passed neo4j_db instance to load schema
+        # No caching needed here as it's called once per run
+        content = self.neo4j_db.get_schema_markdown(self.schema_file)
+        if content is None:
+            # Raise a more specific error if schema loading fails
+            raise FileNotFoundError(f"Schema file '{self.schema_file}' could not be loaded by Neo4jDatabase.")
+        return content
 
     def _convert_temporal_types(self, data: List[Dict]) -> List[Dict]:
         """Converts Neo4j temporal types in query results to ISO strings."""
@@ -56,160 +70,76 @@ class InsightWorkflow:
         insight_gen_final_data = None
 
         try:
-            # --- Step 1: Load Schema --- 
-            yield {"type": "status", "step": "load_schema", "status": "in_progress", "details": "Loading schema..."}
+            # --- Step 1: Load Schema (Needed for Agent Input) ---
+            yield {"type": "status", "step": "load_schema", "status": "in_progress", "details": "Loading schema for insight query generation..."}
             try:
-                schema = self._load_schema()
-                yield {"type": "status", "step": "load_schema", "status": "completed", "details": f"Schema loaded."}
+                schema_content = self._load_schema()
+                yield {"type": "status", "step": "load_schema", "status": "completed", "details": "Schema loaded."}
             except Exception as e:
                  yield {"type": "error", "step": "load_schema", "message": f"Failed to load schema: {e}"}
                  return
 
-            # --- Step 2: Generate Cypher using ainvoke --- 
-            yield {"type": "status", "step": "generate_cypher", "status": "in_progress", "details": "Generating Cypher query(s)..."}
+            # --- Step 2: Generate Queries (Standardized Name) ---
+            yield {"type": "status", "step": "generate_queries", "status": "in_progress", "details": "Generating Cypher query(s)..."}
             
             try:
-                # Invoke directly to get final result
-                query_gen_final_data = await self.query_generator.chain.ainvoke({"query": user_query, "schema": schema})
+                # Invoke the agent's chain. 
+                # Pass the user query AND the loaded schema.
+                query_gen_final_data = await self.insight_query_gen_agent.chain.ainvoke({"query": user_query, "schema": schema_content})
             except OutputParserException as ope:
-                 yield {"type": "error", "step": "generate_cypher", "status": "failed", "message": f"Failed to parse query generator output: {ope}"}
+                 # Use standardized step name in error
+                 yield {"type": "error", "step": "generate_queries", "status": "failed", "message": f"Failed to parse query generator output: {ope}"}
                  return
             except Exception as qg_err:
-                 yield {"type": "error", "step": "generate_cypher", "status": "failed", "message": f"Failed to get query generator result: {qg_err}"}
+                 # Use standardized step name in error
+                 yield {"type": "error", "step": "generate_queries", "status": "failed", "message": f"Failed to get query generator result: {qg_err}"}
                  return
 
+            # Validate output structure
             if not isinstance(query_gen_final_data, dict) or "queries" not in query_gen_final_data:
-                 yield {"type": "error", "step": "generate_cypher", "status": "failed", "message": f"Query generator returned invalid final output format: {query_gen_final_data}"}
+                 yield {"type": "error", "step": "generate_queries", "status": "failed", "message": f"Query generator returned invalid final output format: {query_gen_final_data}"}
                  return
 
-            generated_queries = query_gen_final_data["queries"]
+            generated_queries_list = query_gen_final_data.get("queries", [])
+            
+            # Handle case where no queries are generated
+            if not generated_queries_list:
+                 yield {"type": "status", "step": "generate_queries", "status": "completed", "details": "Insight generation determined no specific Cypher queries are required for this query.", "generated_queries": []}
+                 # Send a final message indicating this. 
+                 yield {"type": "final_insight", "summary": "Based on your query, no specific data retrieval is needed to provide an insight.", "results": [], "requires_execution": False}
+                 return
+
+            # Map the list of strings to the expected frontend format
+            generated_queries_for_frontend = [
+                {"objective": f"Insight Query {i+1}", "query": q}
+                for i, q in enumerate(generated_queries_list)
+            ]
             # Extract query generation reasoning
-            query_generation_reasoning = query_gen_final_data.get("reasoning", "N/A") # Get reasoning, provide default
+            query_generation_reasoning = query_gen_final_data.get("reasoning", "N/A")
             
-            yield {"type": "status", "step": "generate_cypher", "status": "completed", "details": f"Generated {len(generated_queries)} Cypher query(s).", "generated_queries": generated_queries}
-            # Yield reasoning directly from the ainvoke result
-            if query_generation_reasoning != "N/A": # Yield only if reasoning exists
-                 yield {"type": "reasoning_summary", "step": "generate_cypher", "reasoning": query_generation_reasoning}
-
-            # --- Step 3: Execute Cypher Queries Concurrently --- 
-            yield {"type": "status", "step": "execute_cypher", "status": "in_progress", "details": f"Preparing to execute {len(generated_queries)} Cypher query(s) concurrently..."}
-            all_results_combined = []
-            has_error = False
-            error_message = ""
-
-            async def execute_single_query(query: str, index: int) -> Union[List[Dict], Exception]:
-                """Helper coroutine to run a single query and return result or exception."""
-                # This function no longer yields status. Status is handled after gather.
-                loop = asyncio.get_running_loop()
-                try:
-                    # Run Neo4j query in a thread pool executor
-                    results = await loop.run_in_executor(None, self.neo4j_db.query, query, None)
-                    return results
-                except Exception as e:
-                    # Return the exception object itself to be handled by gather
-                    print(f"Error in execute_single_query {index}: {e}") # Add logging
-                    return e
-
-            # Yield status *before* creating tasks
-            yield {"type": "status", "step": "execute_cypher", "status": "in_progress", "details": f"Executing {len(generated_queries)} queries concurrently..."}
-
-            # Create tasks for all queries
-            tasks = [execute_single_query(query, i) for i, query in enumerate(generated_queries)]
+            # Yield generated queries with standardized step name
+            yield {
+                "type": "status", 
+                "step": "generate_queries", # Standardized step name
+                "status": "completed", 
+                "details": f"Generated {len(generated_queries_for_frontend)} Cypher query(s).", 
+                "generated_queries": generated_queries_for_frontend
+            }
             
-            # Use an inner async generator to yield status updates AFTER gathering results
-            async def gather_and_yield(tasks_to_run):
-                nonlocal all_results_combined, has_error, error_message
-                try:
-                    # Gather results or exceptions
-                    results_list = await asyncio.gather(*tasks_to_run)
-                    
-                    # Process results and yield status/errors
-                    for i, result in enumerate(results_list):
-                        if isinstance(result, Exception):
-                            has_error = True
-                            error_message = f"Error executing Cypher query {i+1}: {result}"
-                            yield {"type": "error", "step": "execute_cypher", "message": error_message, "query": generated_queries[i], "query_index": i}
-                            # Decide whether to break or continue gathering results from other queries
-                            # break # Uncomment to stop on first error
-                        elif isinstance(result, list):
-                            # Successfully got results list
-                            all_results_combined.extend(result)
-                            yield {"type": "status", "step": "execute_cypher", "status": "partial_complete", "details": f"Query {i+1} finished, {len(result)} results.", "query_index": i}
-                        else:
-                            # Handle unexpected return type
-                            has_error = True
-                            error_message = f"Unexpected result type for query {i+1}: {type(result)}"
-                            yield {"type": "error", "step": "execute_cypher", "message": error_message, "query": generated_queries[i], "query_index": i}
+            # Yield reasoning with standardized step name
+            if query_generation_reasoning != "N/A":
+                 yield {
+                    "type": "reasoning_summary", 
+                    "step": "generate_queries", # Standardized step name
+                    "reasoning": query_generation_reasoning
+                 }
 
-                except Exception as gather_err:
-                    # Catch potential errors during gather itself 
-                    has_error = True
-                    error_message = f"Error during concurrent query execution: {gather_err}"
-                    yield {"type": "error", "step": "execute_cypher", "message": error_message}
+            # --- Workflow Ends Here (as per standardization) ---
+            print("InsightWorkflow finished: Queries generated.")
 
-            # Run the gather_and_yield generator
-            async for status_update in gather_and_yield(tasks):
-                 yield status_update # Propagate status/error updates from within gather
-
-            # Check if any error occurred during execution
-            if has_error:
-                 yield {"type": "status", "step": "execute_cypher", "status": "failed", "details": f"Concurrent execution failed. {error_message}"}
-                 return
-                 
-            yield {"type": "status", "step": "execute_cypher", "status": "completed", "details": f"All {len(generated_queries)} queries executed concurrently.", "result_count": len(all_results_combined)}
-
-            # --- Step 3.5: Pre-process results for JSON serialization --- 
-            yield {"type": "status", "step": "process_results", "status": "in_progress", "details": "Converting temporal types in results..."}
-            try:
-                processed_data = self._convert_temporal_types(all_results_combined)
-                yield {"type": "status", "step": "process_results", "status": "completed", "details": "Temporal types converted."}
-            except Exception as proc_err:
-                yield {"type": "error", "step": "process_results", "message": f"Failed to process query results: {proc_err}"}
-                return
-
-            # --- Step 4: Generate Insight using ainvoke --- 
-            yield {"type": "status", "step": "generate_insight", "status": "in_progress", "details": "Generating insight..."}
-            insight_gen_final_data = None # Initialize
-            raw_llm_output = None # To store the AIMessage
-            
-            try:
-            
-                # Include query generation reasoning in the input
-                insight_input = {
-                    "query": user_query, 
-                    "data": processed_data, 
-                    "query_generation_reasoning": query_generation_reasoning
-                } 
-                
-                # Invoke the chain, this returns the AIMessage object
-                raw_llm_output = await self.insight_generator.chain.ainvoke(insight_input)
-                
-                # Explicitly parse the content of the message using the agent's parser
-                yield {"type": "status", "step": "generate_insight", "status": "in_progress", "details": "Parsing insight generator output..."}
-                # Ensure the agent has the 'output_parser' attribute defined in its __init__
-                if hasattr(self.insight_generator, 'output_parser') and callable(getattr(self.insight_generator.output_parser, 'parse', None)):
-                    insight_gen_final_data = self.insight_generator.output_parser.parse(raw_llm_output.content)
-                else:
-                    # Fallback or raise error if parser is missing
-                    yield {"type": "error", "step": "generate_insight", "status": "failed", "message": "InsightGeneratorAgent is missing the output_parser attribute."}
-                    return 
-
-            except OutputParserException as ope:
-                # Handle parsing errors
-                yield {"type": "error", "step": "generate_insight", "status": "failed", "message": f"Failed to parse insight generator output: {ope}"}
-                return
-            except Exception as ig_err:
-                # Catch other errors during ainvoke or parsing
-                yield {"type": "error", "step": "generate_insight", "status": "failed", "message": f"Failed during insight generation or parsing: {ig_err}"}
-                return
-
-            # Check the parsed data
-            if not isinstance(insight_gen_final_data, dict) or "insight" not in insight_gen_final_data:
-                 yield {"type": "error", "step": "generate_insight", "status": "failed", "message": f"Insight generator returned invalid final output format after parsing: {insight_gen_final_data}"}
-                 return
-
-            # Yield the final parsed dictionary
-            yield {"type": "final_insight", "step": "generate_insight", "status": "completed", **insight_gen_final_data}
+            # REMOVED: Step 3: Execute Cypher Queries Concurrently 
+            # REMOVED: Step 3.5: Pre-process results for JSON serialization
+            # REMOVED: Step 4: Generate Insight using ainvoke
 
         except Exception as e:
             yield {"type": "error", "step": "workflow_exception", "message": f"Insight Workflow Error: {e}"}
@@ -217,7 +147,7 @@ class InsightWorkflow:
             traceback.print_exc()
         finally:
             # Yield a workflow end status
-            yield {"type": "status", "step": "insight_workflow_end", "status": "finished"}
+            yield {"type": "status", "step": "insight_workflow_end", "status": "finished_generation"}
 
 # Example usage (for testing)
 if __name__ == '__main__':
