@@ -20,7 +20,6 @@ class OptimizationRecommendationGeneratorAgent:
     Uses LangChain's built-in streaming (.astream_log).
     """
     def __init__(self):
-        print(">>> Using UPDATED OptimizationRecommendationGeneratorAgent! <<<") # Add verification print
         self.prompt: ChatPromptTemplate = create_optimization_generator_prompt()
         self.llm = ChatOpenAI(
             model=LLM_MODEL_NAME,
