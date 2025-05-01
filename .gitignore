@@ -26,5 +26,3 @@ env/
 # Other common ignores
 .DS_Store
 *.pem
-.//home/srinivasan/FIles/frontend/graphdb/nextjs-frontend/node_modules
-./pipeline
