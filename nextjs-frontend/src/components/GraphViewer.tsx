@@ -12,9 +12,24 @@ import dynamic from 'next/dynamic';
 // Dynamically import Plotly to avoid SSR issues
 const Plot = dynamic(() => import('react-plotly.js'), { ssr: false });
 
+// Define a more specific type for graph suggestions
+interface GraphSuggestion {
+    type?: string; 
+    columns?: { 
+        x?: string; 
+        y?: string; 
+        names?: string; 
+        values?: string; 
+        color?: string 
+    }; 
+    title?: string;
+    // Allow other potential properties
+    [key: string]: unknown; 
+}
+
 interface GraphViewerProps {
     result: QueryResult | undefined;
-    graphSuggestion: Record<string, any> | null;
+    graphSuggestion: GraphSuggestion | null; // Use the specific type
     currentIndex: number;
     totalCount: number;
     onNext: () => void;
@@ -78,17 +93,62 @@ const GraphViewer: React.FC<GraphViewerProps> = ({ result, graphSuggestion, curr
         const valCol = columns?.values;
         const colorCol = columns?.color;
 
-        let plotData: Partial<Plotly.PlotData>[] = [];
+        // --- Customizations --- 
+        const themeFontColor = 'hsl(var(--foreground))';
+        const themeMutedColor = 'hsl(var(--muted-foreground))';
+        const themeBorderColor = 'hsl(var(--border))';
+        const themePrimaryColor = 'hsl(var(--primary))';
+        const themeSecondaryColor = 'hsl(var(--secondary))'; 
+        // Define a custom color sequence based on theme vars (adjust as needed)
+        const customColorway = [
+            themePrimaryColor,
+            'hsl(var(--destructive))', // Example: using destructive for contrast
+            'hsl(var(--chart-3))', // Assuming you have chart colors in globals.css
+            'hsl(var(--chart-4))',
+            'hsl(var(--chart-5))',
+            themeSecondaryColor 
+        ];
+        // --- End Customizations ---
+
+        const plotData: Partial<Plotly.PlotData>[] = [];
+        // eslint-disable-next-line prefer-const
         let layout: Partial<Plotly.Layout> = {
-            title: { text: title || result?.objective || 'Generated Graph', font: { size: 14 } },
-            xaxis: { title: { text: xCol || '', font: { size: 12 } }, automargin: true },
-            yaxis: { title: { text: yCol || '', font: { size: 12 } }, automargin: true },
-            margin: { l: 50, r: 20, t: 40, b: 40 }, 
+            title: { 
+                text: title || result?.objective || 'Generated Graph', 
+                font: { size: 16, color: themeFontColor } // Larger title
+            }, 
+            xaxis: { 
+                title: { text: xCol || '', font: { size: 12, color: themeMutedColor } }, 
+                automargin: true, 
+                gridcolor: themeBorderColor, // Subtle gridlines
+                zerolinecolor: themeBorderColor,
+                tickfont: { color: themeMutedColor, size: 10 }, // Smaller tick labels
+                // showgrid: false, // Optional: hide gridlines
+            }, 
+            yaxis: { 
+                title: { text: yCol || '', font: { size: 12, color: themeMutedColor } }, 
+                automargin: true, 
+                gridcolor: themeBorderColor, // Subtle gridlines
+                zerolinecolor: themeBorderColor,
+                tickfont: { color: themeMutedColor, size: 10 } // Smaller tick labels
+            }, 
+            margin: { l: 60, r: 30, t: 50, b: 50 }, // Adjusted margins
             height: 350, 
             autosize: true,
             paper_bgcolor: 'transparent',
             plot_bgcolor: 'transparent',
-            font: { color: 'hsl(var(--foreground))' }
+            font: { color: themeFontColor, family: 'inherit' }, // Use inherited font family
+            colorway: customColorway, // Apply custom color sequence
+            hovermode: 'closest', // Standard hover mode
+            legend: { // Legend styling (more relevant for multi-trace/pie)
+                 orientation: "h", // Horizontal legend
+                 yanchor: "bottom",
+                 y: -0.2, // Position below plot
+                 xanchor: 'center',
+                 x: 0.5,
+                 bgcolor: 'transparent',
+                 font: { color: themeMutedColor, size: 10 }
+             }
         };
 
         try { // Add try-catch for data access
@@ -97,32 +157,85 @@ const GraphViewer: React.FC<GraphViewerProps> = ({ result, graphSuggestion, curr
                 case 'line':
                 case 'scatter':
                     if (!xCol || !yCol || !data[0]?.[xCol] || !data[0]?.[yCol]) return null; // Check columns exist in data
-                    const xValues = data.map(row => row[xCol]);
-                    const yValues = data.map(row => row[yCol]);
+                    const xValues = data.map(row => row[xCol]) as Plotly.Datum[]; // Cast to Plotly.Datum[]
+                    const yValues = data.map(row => row[yCol]) as Plotly.Datum[]; // Cast to Plotly.Datum[]
                     const trace: Partial<Plotly.PlotData> = { 
                         x: xValues, 
                         y: yValues, 
                         type: type === 'line' ? 'scatter' : type,
                         mode: type === 'line' ? 'lines+markers' : (type === 'scatter' ? 'markers' : undefined),
-                        name: title || yCol
+                        name: title || yCol, // Used in legend/tooltip
+                        marker: { // Marker/bar styling
+                             line: { // Border for bars/markers
+                                 color: type === 'bar' ? 'hsl(var(--background))' : undefined, // Subtle border for bars
+                                 width: type === 'bar' ? 1 : 0
+                             },
+                             opacity: 0.9, // Slightly transparent
+                             size: type === 'scatter' ? 8 : undefined // Marker size for scatter
+                        },
+                        line: { // Line styling
+                             width: type === 'line' ? 2 : undefined 
+                        },
+                        // --- Custom Hover Template --- 
+                        hovertemplate: 
+                            `<b>${xCol || 'X'}:</b> %{x}<br>` +
+                            `<b>${yCol || 'Y'}:</b> %{y}<br>` +
+                            // Add color value if colorCol exists
+                            (colorCol && data[0]?.[colorCol] ? `<b>${colorCol}:</b> %{marker.color}<br>` : '') +
+                            '<extra></extra>' // Hide default trace info
                     };
+                    
+                    // Handle custom color based on `colorCol` if provided
                     if (colorCol && data[0]?.[colorCol]) {
-                        const colorValues = data.map(row => row[colorCol]);
-                        trace.marker = { ...(trace.marker || {}), color: colorValues };
+                        const colorValues = data.map(row => row[colorCol]) as Plotly.Color; // Cast to Plotly.Color
+                        // Apply color directly to marker.color if it exists
+                        trace.marker = { ...(trace.marker || {}), color: colorValues }; 
+                        // Maybe add a color axis/bar if appropriate?
+                        // layout.coloraxis = { colorscale: 'Viridis' }; // Example
+                        // Remove layout.colorway if using marker.color for this trace
+                        layout.colorway = undefined; 
+                        // Add color info to hovertemplate (already done above)
+                    } else {
+                         // If not coloring by column, ensure the first color from the way is used
+                         if (trace.marker) trace.marker.color = customColorway[0];
+                         if (trace.line) trace.line.color = customColorway[0];
                     }
+                    
                     plotData.push(trace);
                     break;
 
                 case 'pie':
                     if (!nameCol || !valCol || !data[0]?.[nameCol] || !data[0]?.[valCol]) return null; // Check columns exist
                     plotData.push({ 
-                        labels: data.map(row => row[nameCol]), 
-                        values: data.map(row => row[valCol]), 
+                        labels: data.map(row => row[nameCol]) as Plotly.Datum[], // Cast to Plotly.Datum[]
+                        values: data.map(row => row[valCol]) as Plotly.Datum[], // Cast to Plotly.Datum[]
                         type: 'pie',
-                        hole: 0.3
+                        hole: 0.4, // Make it a donut chart
+                        textfont: { 
+                            size: 10, 
+                            color: 'hsl(var(--background))' // Example: contrast against slice color
+                        }, 
+                        marker: { 
+                            colors: customColorway,
+                            line: { // Border between slices
+                                color: 'hsl(var(--background))', // Use background color for separation
+                                width: 1
+                            }
+                        },
+                        // Set hoverinfo to 'none' and rely solely on hovertemplate
+                        hoverinfo: 'none', 
+                        textinfo: 'percent', 
+                        // Remove layout.uniformtext as it's not a valid top-level layout property here
+                        // layout.uniformtext = { mode: 'hide', minsize: 10 }; 
+                        // --- Custom Hover Template --- 
+                        hovertemplate: 
+                            `<b>${nameCol || 'Category'}:</b> %{label}<br>` +
+                            `<b>${valCol || 'Value'}:</b> %{value}<br>` +
+                            `<b>Percent:</b> %{percent}<extra></extra>`
                     });
                     layout.xaxis = undefined;
                     layout.yaxis = undefined;
+                    layout.showlegend = true; // Ensure legend is shown for pies
                     break;
 
                 default:
@@ -137,7 +250,12 @@ const GraphViewer: React.FC<GraphViewerProps> = ({ result, graphSuggestion, curr
         return {
             data: plotData,
             layout: layout,
-            config: { responsive: true },
+            // Remove Plotly logo, adjust modebar buttons
+            config: { 
+                responsive: true, 
+                displaylogo: false, 
+                modeBarButtonsToRemove: ['select2d', 'lasso2d', 'zoomIn2d', 'zoomOut2d', 'autoScale2d'] 
+            },
             style: { width: '100%', height: '100%' },
             useResizeHandler: true,
         };

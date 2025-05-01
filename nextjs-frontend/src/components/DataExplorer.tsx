@@ -7,12 +7,13 @@ import GraphViewer from './GraphViewer';
 
 interface DataExplorerProps {
   queryResults: QueryResult[];
-  graphSuggestions: Record<string, any>[];
+  graphSuggestions: { objective: string; [key: string]: unknown }[];
   isProcessing: boolean;
+  onSetPendingContext: (context: { display: string; backend: string }) => void;
 }
 
 // --- Main Data Explorer Component --- 
-const DataExplorer: React.FC<DataExplorerProps> = ({ queryResults, graphSuggestions, isProcessing }) => {
+const DataExplorer: React.FC<DataExplorerProps> = ({ queryResults, graphSuggestions, isProcessing, onSetPendingContext }) => {
   const [currentTableIndex, setCurrentTableIndex] = useState(0);
   const [currentGraphIndex, setCurrentGraphIndex] = useState(0);
 
@@ -27,7 +28,7 @@ const DataExplorer: React.FC<DataExplorerProps> = ({ queryResults, graphSuggesti
           if(currentTableIndex >= totalResults) setCurrentTableIndex(totalResults - 1); 
           if(currentGraphIndex >= totalResults) setCurrentGraphIndex(totalResults - 1);
       }
-  }, [totalResults]); 
+  }, [totalResults, currentTableIndex, currentGraphIndex]); 
 
   const handleNextTable = () => setCurrentTableIndex(prev => Math.min(prev + 1, totalResults > 0 ? totalResults - 1 : 0));
   const handlePrevTable = () => setCurrentTableIndex(prev => Math.max(prev - 1, 0));
@@ -47,6 +48,7 @@ const DataExplorer: React.FC<DataExplorerProps> = ({ queryResults, graphSuggesti
   return (
     <div className="space-y-6">
       <TableViewer 
+        key={`table-${currentTableIndex}`}
         result={selectedTableResult} 
         currentIndex={currentTableIndex} 
         totalCount={totalResults} 
@@ -54,6 +56,7 @@ const DataExplorer: React.FC<DataExplorerProps> = ({ queryResults, graphSuggesti
         onPrev={handlePrevTable}
         isProcessing={isProcessing} 
         isInitialState={isInitialState}
+        onSetPendingContext={onSetPendingContext}
       />
        <GraphViewer 
         result={selectedGraphResult}

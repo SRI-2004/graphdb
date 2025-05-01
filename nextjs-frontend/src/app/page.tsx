@@ -23,13 +23,28 @@ import DataExplorer from '@/components/DataExplorer';
 
 export default function Home() {
   // Get currentStatus, isProcessing, and graphSuggestions list from useChat now
-  const { messages, queryResults, sendMessage, connectionStatus, readyState, currentStatus, isProcessing, graphSuggestions } = useChat();
+  const { messages, queryResults, sendMessage, readyState, currentStatus, isProcessing, graphSuggestions } = useChat();
   const [inputValue, setInputValue] = useState('');
+  const [pendingContext, setPendingContext] = useState<{ display: string; backend: string } | null>(null);
   const chatHistoryRef = useRef<HTMLDivElement>(null);
 
+  const handleSetPendingContext = (context: { display: string; backend: string }) => {
+    setPendingContext(context);
+    console.log("Context staged: Display=", context.display);
+  };
+
   const handleSend = () => {
-    sendMessage(inputValue);
-    setInputValue(''); // Clear input after sending
+    if (!inputValue.trim() && !pendingContext) return;
+
+    let messageToSend = inputValue;
+    if (pendingContext) {
+      messageToSend = `---DISPLAY_CONTEXT START---${pendingContext.display}---DISPLAY_CONTEXT END------BACKEND_CONTEXT START---${pendingContext.backend}---BACKEND_CONTEXT END------QUERY START---${inputValue}`;
+      console.log("Constructed messageToSend:", messageToSend);
+    }
+    
+    sendMessage(messageToSend);
+    setInputValue('');
+    setPendingContext(null);
   };
 
   const handleKeyPress = (event: React.KeyboardEvent<HTMLInputElement>) => {
@@ -123,39 +138,44 @@ export default function Home() {
       );
     }
     
-    // Fallback: Render simple content string if no structured report
-    return (
-      <div className='space-y-2'>
-        {/* Apply prose styling to a wrapper div */} 
-        <div className="prose dark:prose-invert prose-sm max-w-none break-words assistant-bubble"> {/* Added assistant-bubble here too */} 
-          {/* Add rehypeRaw plugin here */}
-          <ReactMarkdown 
-            remarkPlugins={[remarkGfm]}
-            rehypePlugins={[rehypeRaw]} 
-          >
-            {msg.content} 
-          </ReactMarkdown>
-        </div>
-        {/* Render global reasoning if present on the message */}
-        {msg.reasoning && (
-            <div className='mt-2 text-xs p-2 border rounded bg-muted/30'>
-                <div className="prose dark:prose-invert prose-xs max-w-none">
-                    <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]}>
-                        {msg.reasoning}
-                    </ReactMarkdown>
-                 </div>
+    // Handle Context Info messages
+    if (msg.role === 'context_info') {
+        return (
+            <div className="prose dark:prose-invert prose-sm max-w-none break-words">
+                <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]}>
+                    {msg.content} 
+                </ReactMarkdown>
             </div>
-        )}
+        );
+    }
+    
+    // Handle User Messages with potential context
+    if (msg.role === 'user') {
+        return (
+            <div className="prose dark:prose-invert prose-sm max-w-none break-words">
+                <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]}>
+                    {msg.content} 
+                </ReactMarkdown>
+            </div>
+        );
+    }
+    
+    // Fallback for Assistant (non-report), System messages
+    return (
+      <div className="prose dark:prose-invert prose-sm max-w-none break-words"> 
+        <ReactMarkdown 
+          remarkPlugins={[remarkGfm]}
+          rehypePlugins={[rehypeRaw]} 
+        >
+          {msg.content} 
+        </ReactMarkdown>
       </div>
     );
   };
 
   return (
     <main className="flex h-screen flex-col p-4 gap-4 bg-background text-foreground">
-       {/* Top Bar (Optional - can show connection status) */} 
-       {/* <div className="flex-shrink-0 text-xs text-muted-foreground"> */}
-       {/*   Connection Status: {connectionStatus} */}
-       {/* </div> */}
+    
        
        <div className="flex flex-1 flex-row items-stretch gap-4 overflow-hidden"> 
           {/* Left Pane: Chat */}
@@ -168,27 +188,29 @@ export default function Home() {
                 {/* Chat History Area */}
                 <div ref={chatHistoryRef} className="flex-1 overflow-y-auto mb-4 space-y-4 pr-2">
                   {messages.map((msg) => (
-                    <div key={msg.id} className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
+                    <div key={msg.id} className={`flex flex-col ${ (msg.role === 'user' || msg.role === 'context_info') ? 'items-end' : 'items-start' }`}> 
                         <div 
-                          className={`p-3 rounded-lg shadow-sm ${ 
+                          className={`rounded-lg shadow-sm ${ 
                             msg.role === 'user' 
-                              ? 'max-w-[85%] bg-primary text-primary-foreground' 
+                              ? 'max-w-[85%] bg-primary text-primary-foreground p-3'
                               : msg.role === 'assistant' 
                               ? (msg.reportSections && msg.reportSections.length > 0
-                                  ? 'w-full bg-muted text-muted-foreground assistant-bubble' // Use w-full for accordion messages
-                                  : 'max-w-[85%] bg-muted text-muted-foreground assistant-bubble' // Keep max-width for normal assistant messages
+                                  ? 'w-full bg-muted text-muted-foreground p-3'
+                                  : 'max-w-[85%] bg-muted text-muted-foreground p-3 assistant-bubble'
                                 )
-                              : msg.role === 'milestone'
-                              ? 'w-full bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 border border-blue-300 dark:border-blue-700' // Milestones are full width
-                              : 'max-w-[85%] bg-destructive/10 text-destructive border border-destructive/30' // System/Error messages
+                              : msg.role === 'milestone' 
+                              ? 'w-full bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 border border-blue-300 dark:border-blue-700 p-3'
+                              : msg.role === 'context_info'
+                              ? 'max-w-[85%] bg-blue-600 dark:bg-blue-700 text-blue-50 mb-1 px-2 py-1 text-xs'
+                              : 'max-w-[85%] bg-destructive/10 text-destructive border border-destructive/30 p-3'
                           }`}
                         >
                           {renderMessageContent(msg)}
                       </div>
-                      {/* Show role label only for assistant/system/milestone */} 
-                      {msg.role !== 'user' && (
-                         <p className="text-xs text-muted-foreground mt-1">
-                             {msg.role === 'assistant' ? 'Assistant' : msg.role === 'system' ? 'System' : 'Milestone'}
+                      {/* --- EDIT: Exclude context_info from role label --- */}
+                      {(msg.role !== 'user' && msg.role !== 'context_info') && (
+                         <p className="text-xs text-muted-foreground mt-1 capitalize">
+                             {msg.role.replace('_', ' ')}
                          </p>
                       )}
                     </div>
@@ -238,7 +260,12 @@ export default function Home() {
                 <CardTitle>Data Explorer</CardTitle>
               </CardHeader>
               <CardContent className="flex-1 overflow-y-auto p-4">
-                 <DataExplorer queryResults={queryResults} graphSuggestions={graphSuggestions} isProcessing={isProcessing} />
+                 <DataExplorer 
+                    queryResults={queryResults} 
+                    graphSuggestions={graphSuggestions} 
+                    isProcessing={isProcessing} 
+                    onSetPendingContext={handleSetPendingContext}
+                 />
               </CardContent>
             </Card>
           </div>
