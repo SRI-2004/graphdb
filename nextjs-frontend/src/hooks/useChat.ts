@@ -63,7 +63,7 @@ interface GraphSuggestion {
 }
 
 // Update URL to the deployed Render backend (using wss for https)
-const WEBSOCKET_URL = 'ws://localhost:8050/api/v1/chat/stream'; 
+const WEBSOCKET_URL = 'wss://backend-graphdb.onrender.com/api/v1/chat/stream'; 
 
 export function useChat() {
   // Main chat history (including milestones)
