@@ -1,3 +1,30 @@
-/.env
-/.nextjs-frontend/node_modules
-/.pipeline
+# Environment variables
+Backend/fastapi-backend/.env
+*.env
+*.env.*
+!.env.example
+
+# Secrets / Sensitive Config
+schema.py
+
+# Python cache/build artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Build directories
+build/
+dist/
+*.egg-info/
+
+# Virtual environment
+.venv/
+venv/
+ENV/
+env/
+
+# Other common ignores
+.DS_Store
+*.pem
+.//home/srinivasan/FIles/frontend/graphdb/nextjs-frontend/node_modules
+./pipeline
