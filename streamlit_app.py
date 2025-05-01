@@ -3,6 +3,7 @@ import pandas as pd
 import asyncio
 import os
 import sys
+import plotly.express as px
 from dotenv import load_dotenv
 from neo4j import AsyncGraphDatabase, RoutingControl
 
@@ -430,8 +431,39 @@ with col_data:
             if dataframe.empty:
                 st.success("Query executed successfully, but returned no data.")
             else:
-                st.info("You can edit the data below (changes are not saved back to Neo4j yet).")
+                # Display Table
+                st.info("Data Table:") # Added heading for clarity
                 st.data_editor(dataframe, use_container_width=True, key=f"data_editor_{current_index}") # Use index in key
+
+                # --- Add Plotly Chart ---
+                st.markdown("---") # Add a separator
+                st.info("Data Visualization:")
+                try:
+                    # Basic heuristic: Check for common patterns or specific columns
+                    # Customize this logic based on your expected query results
+                    cols = dataframe.columns
+                    if len(cols) >= 2:
+                        # Simple bar chart if two columns (treat first as category, second as value)
+                        # You might need more sophisticated checks based on column names or types
+                        # For example, check if cols[1] is numeric: pd.api.types.is_numeric_dtype(dataframe[cols[1]])
+                        st.write(f"Attempting basic bar chart with X='{cols[0]}' and Y='{cols[1]}'") # Corrected string formatting
+                        fig = px.bar(dataframe, x=cols[0], y=cols[1], title=f"Chart for {objective}")
+                        st.plotly_chart(fig, use_container_width=True)
+                    # Add more 'elif' conditions here for other chart types (scatter, line, etc.)
+                    # based on column names or number of columns.
+                    # Example:
+                    # elif 'x_col' in cols and 'y_col' in cols:
+                    #     fig = px.scatter(dataframe, x='x_col', y='y_col', title=f"Scatter Plot for {objective}")
+                    #     st.plotly_chart(fig, use_container_width=True)
+                    else:
+                        st.markdown("_Could not determine suitable columns for a basic chart._")
+
+                except Exception as plot_e:
+                    st.warning(f"Could not generate chart: {plot_e}")
+                    # Optionally print traceback for debugging in console
+                    # import traceback
+                    # print(f"Plotting Error: {plot_e}\n{traceback.format_exc()}")
+
         else:
              st.warning("No data available for this query result.")
 
