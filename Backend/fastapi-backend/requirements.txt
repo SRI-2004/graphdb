@@ -17,6 +17,5 @@ nest-asyncio>=1.6.0,<2.0.0
 plotly>=5.0.0,<6.0.0
 
 langchain-text-splitters==0.2.2
-langchain-community==0.2.7
 mem0ai
 
