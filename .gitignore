@@ -1,1 +1,3 @@
 /.env
+/.nextjs-frontend/node_modules
+/.pipeline
