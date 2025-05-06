@@ -6,7 +6,8 @@ Backend/fastapi-backend/.env
 
 # Secrets / Sensitive Config
 schema.py
-
+node_modules/
+.next/
 # Python cache/build artifacts
 __pycache__/
 *.py[cod]

@@ -1,0 +1,142 @@
+import os
+import json
+from typing import Dict, Any, AsyncIterator, List, Union, Optional
+import asyncio
+
+from langchain_openai import ChatOpenAI
+from langchain_core.runnables import RunnableConfig
+from langchain_core.output_parsers import JsonOutputParser
+from langchain_core.prompts import ChatPromptTemplate
+
+# from mem0 import AsyncMemoryClient # Removed memory client
+
+from ..prompts.classifier import create_classifier_prompt
+
+# Ensure OPENAI_API_KEY and MEM0_API_KEY are set
+# Consider adding load_dotenv() here if this module might be run independently
+
+# Configuration
+LLM_MODEL_NAME = "gpt-4o" # Or your preferred GPT-4 model
+
+class ClassifierAgent:
+    """
+    Agent responsible for classifying user queries into 'insight' or 'optimization' workflows.
+    Uses LangChain's .ainvoke() internally. Memory functionality has been removed.
+    Returns the final classification result.
+    """
+    def __init__(self):
+        # Initialize LLM
+        try:
+            openai_api_key = os.getenv("OPENAI_API_KEY")
+            if not openai_api_key:
+                raise ValueError("OPENAI_API_KEY environment variable not set.")
+            # mem0_api_key = os.getenv("MEM0_API_KEY") # Memory key check removed
+            # if not mem0_api_key:
+            #     # Classifier absolutely needs memory, so raise error if not configured
+            #     raise ValueError("MEM0_API_KEY environment variable not set. ClassifierAgent requires memory.")
+            # else:
+            #     self.mem0 = AsyncMemoryClient() # Ensure Async client is used # Memory client init removed
+
+            self.llm = ChatOpenAI(
+                model=LLM_MODEL_NAME,
+                temperature=0.0, # Low temperature for classification/structured output
+                streaming=False, # Not streaming for ainvoke
+            )
+        except Exception as e:
+            print(f"CRITICAL: Failed to initialize LLM in ClassifierAgent: {e}") # Updated error message
+            raise RuntimeError(f"Failed to initialize LLM: {e}") from e
+
+        self.prompt: ChatPromptTemplate = create_classifier_prompt()
+        self.output_parser = JsonOutputParser()
+
+        # Define the chain - memory input is removed
+        self._chain = (
+            self.prompt
+            | self.llm
+            | self.output_parser
+        )
+
+    async def run(self, query: str, user_id: str) -> Optional[Dict[str, Any]]:
+        """
+        Processes the user query, classifies the intent/
+        entities OR generates a direct answer, and returns
+        the structured output. Memory retrieval and saving have been removed.
+
+        Args:
+            query: The user's natural language query.
+            user_id: The unique identifier for the user session (currently unused).
+
+        Returns:
+            A dictionary containing the classification result (action, response,
+            workflow_type, entities) or None if an error occurs.
+            Expected format (to be defined by prompt):
+            {
+              "action": "answer" | "trigger_workflow",
+              "response": "string",
+              "workflow_type": "insight" | "optimization" | null,
+              "entities": [/*...*/] | null
+            }
+        """
+        # 1. Retrieve memories - REMOVED
+        # memories = []
+        # try:
+        #     memories = await self.mem0.search(user_id=user_id, query=query, limit=5) # Limit history length
+        #     print(f"ClassifierAgent: Retrieved {len(memories)} memories for user {user_id}")
+        # except Exception as e:
+        #     print(f"ClassifierAgent: Error retrieving memories for user {user_id}: {e}")
+            # Proceed without memory if retrieval fails
+
+        # Format memories for the prompt (simple chronological string) - REMOVED
+        # formatted_memories = "\\n".join([f"{m['role']}: {m['content']}" for m in memories])
+        # if not formatted_memories:
+        #     formatted_memories = "No relevant conversation history found."
+        formatted_memories = "Memory not available." # Placeholder as memory is removed
+
+        # 2. Invoke the chain with query (memory input removed)
+        # input_data = {\"query\": query, \"memories\": formatted_memories} # Old input
+        input_data = {"query": query, "memories": formatted_memories} # Pass placeholder to prompt if it still expects 'memories' key
+        # !! IMPORTANT !!: Ensure the create_classifier_prompt() function's template
+        # either no longer requires a 'memories' variable or can handle the placeholder string gracefully.
+        # If the prompt template variable 'memories' was removed, change input_data to just {"query": query}
+
+        final_output = None
+        invoke_exception = None
+
+        try:
+            final_output = await self._chain.ainvoke(input_data)
+            print(f"ClassifierAgent: Raw LLM Output (parsed): {final_output}")
+        except Exception as e:
+            invoke_exception = e
+            print(f"ClassifierAgent: Exception during chain ainvoke: {e}")
+            # Fallthrough to return None
+
+        # 3. Save the current interaction to memory - REMOVED
+        # assistant_response_content = "Error processing classification."
+        # if invoke_exception:
+        #     assistant_response_content = f"Internal Error: Could not process request due to: {invoke_exception}"
+        # elif final_output and isinstance(final_output, dict) and "response" in final_output:
+        #     # Use the response generated by the LLM (could be direct answer or pre-workflow message)
+        #     assistant_response_content = final_output["response"]
+        # elif final_output:
+        #     # Handle cases where output exists but isn't the expected dict format
+        #     assistant_response_content = f"Internal Error: Received unexpected output format: {str(final_output)[:200]}"
+        # # If final_output is None but no invoke_exception, keep default error message
+
+        # try:
+        #     interaction = [
+        #         {"role": "user", "content": query},
+        #         {"role": "assistant", "content": assistant_response_content}
+        #     ]
+        #     await self.mem0.add(interaction, user_id=user_id)
+        #     print(f"ClassifierAgent: Saved interaction to memory for user {user_id}")
+        # except Exception as e:
+        #     print(f"ClassifierAgent: Error saving interaction to Mem0 for user {user_id}: {e}")
+            # Non-critical error, processing can continue
+
+        # 4. Return the structured output (or None if invoke failed)
+        if isinstance(final_output, dict): # Basic check, assumes prompt enforces structure
+            return final_output
+        else:
+            # If invoke failed or output format was wrong
+            return None
+

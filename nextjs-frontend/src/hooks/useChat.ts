@@ -24,7 +24,8 @@ export interface QueryResult {
 
 // Define the structure of messages coming FROM the WebSocket
 interface WebSocketMessage {
-    type: string; // 'status', 'reasoning_summary', 'final_insight', 'final_recommendations', 'error', 'generated_queries', 'query_result', 'classifier_answer', 'classifier_info', 'routing_decision', 'graph_suggestions'
+    type: string; // 'status', 'reasoning_summary', 'final_insight', 'final_recommendations', 'error', 'generated_queries', 'query_result', 'classifier_answer', 'classifier_info', 'routing_decision', 'graph_suggestions', 'connection_established'
+    user_id?: string; // <-- Added user_id for connection_established
     // Add fields based on the backend stream types
     step?: string;
     status?: string;
@@ -62,10 +63,17 @@ interface GraphSuggestion {
     [key: string]: unknown; 
 }
 
-// Update URL to the deployed Render backend (using wss for https)
-const WEBSOCKET_URL = 'wss://backend-graphdb.onrender.com/api/v1/chat/stream'; 
+// Get WebSocket URL from environment variable
+const WEBSOCKET_URL = process.env.NEXT_PUBLIC_WEBSOCKET_URL;
+
+if (!WEBSOCKET_URL) {
+  console.error("Error: NEXT_PUBLIC_WEBSOCKET_URL environment variable is not set!");
+  // Optionally provide a default or throw an error depending on requirements
+}
 
 export function useChat() {
+  // User ID received from WebSocket connection
+  const [userId, setUserId] = useState<string | null>(null);
   // Main chat history (including milestones)
   const [messages, setMessages] = useState<ChatMessage[]>([
       {
@@ -84,16 +92,17 @@ export function useChat() {
   const [graphSuggestions, setGraphSuggestions] = useState<GraphSuggestion[]>([]); // Use the specific interface
 
   const {
-    sendMessage: sendWebSocketMessage,
+    // sendMessage: sendWebSocketMessage, // We don't use the hook's sendMessage anymore
     lastJsonMessage,
     readyState,
-  } = useWebSocket<WebSocketMessage>(WEBSOCKET_URL, {
-    share: false, // Each component instance gets its own connection (if needed, else true)
-    shouldReconnect: () => true, // Removed unused _closeEvent parameter
-    onOpen: () => { console.log('WebSocket Connected'); setCurrentStatus(null); setIsProcessing(false); },
-    onClose: () => { console.log('WebSocket Disconnected'); setCurrentStatus('Connection closed.'); setIsProcessing(false); },
-    onError: (event) => { console.error('WebSocket Error:', event); setCurrentStatus('Connection error.'); setIsProcessing(false); },
-  });
+  } = useWebSocket<WebSocketMessage>(WEBSOCKET_URL || '', { // Use URL or empty string if undefined
+    share: false, 
+    shouldReconnect: () => true, 
+    retryOnError: true, // Attempt to reconnect on error
+    onOpen: () => { console.log('WebSocket Connected'); setCurrentStatus(null); setIsProcessing(false); /* userId will be set on message */ },
+    onClose: () => { console.log('WebSocket Disconnected'); setUserId(null); setCurrentStatus('Connection closed.'); setIsProcessing(false); },
+    onError: (event) => { console.error('WebSocket Error:', event); setUserId(null); setCurrentStatus('Connection error.'); setIsProcessing(false); },
+  }, !!WEBSOCKET_URL); // Only connect if the URL is defined
 
   // Function to generate unique IDs
   const generateId = () => `msg_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
@@ -117,34 +126,45 @@ export function useChat() {
       
       // Handle different message types from backend
       switch (type) {
+        case 'connection_established': // Handle initial connection message
+          if (lastJsonMessage.user_id) {
+            setUserId(lastJsonMessage.user_id);
+            console.log('Received user_id:', lastJsonMessage.user_id);
+            // Optional: Add a system message indicating connection success
+            // setMessages(prev => [...prev, { id: generateId(), role: 'system', content: 'Connection established.'}]);
+          } else {
+            console.error('connection_established message received without user_id');
+          }
+          break;
+          
         case 'status':
           const statusText = `**${step?.replace(/_/g, ' ')}**: ${status?.replace(/_/g, ' ')}${lastJsonMessage.details ? ` - ${lastJsonMessage.details}` : ''}`;
           setCurrentStatus(statusText); // Overwrite status
 
           // Clear status and processing flag if workflow ends
-          if (step === 'opt_workflow_end' || step === 'insight_workflow_end') {
+          // --- EDIT: Use endsWith for more robust checking --- 
+          if (step?.endsWith('workflow_end')) {
               setCurrentStatus(null); 
               setIsProcessing(false); // <<< SET PROCESSING TO FALSE HERE
-              break; 
-          }
-
-          // Check for step completions to create milestones
-          if (status === 'completed') {
+          } else if (status === 'completed') {
+              // Handle step completions to create milestones
               let milestoneContent = `✅ ${step?.replace(/_/g, ' ')} Finished`;
               let milestoneQueries: { objective: string; query: string }[] | undefined = undefined;
 
-              if ((step === 'generate_opt_queries' || step === 'generate_cypher') && lastJsonMessage.generated_queries) {
+              // Updated milestone detection
+              if (step?.includes('generate') && step?.includes('queries') && lastJsonMessage.generated_queries) {
                    const queryCount = lastJsonMessage.generated_queries.length;
                    const queryNoun = queryCount === 1 ? 'query' : 'queries';
                    milestoneContent = `✅ Query Generation Finished (${queryCount} ${queryNoun})`;
                    milestoneQueries = lastJsonMessage.generated_queries; 
-              } else if (step === 'execute_opt_queries' || step === 'execute_cypher') {
-                  // Also check for insight workflow execution step
+              } else if (step?.includes('execute') && step?.includes('queries')) {
                   milestoneContent = `✅ Query Execution Finished`;
+              } else if (step?.includes('classification')) {
+                  milestoneContent = `✅ Classification Finished`; // Example: Add milestone for classification
               } // Add other potential milestone steps here
 
-              // Add the milestone message only if it's a recognized step
-              if (step === 'generate_opt_queries' || step === 'generate_cypher' || step === 'execute_opt_queries' || step === 'execute_cypher') {
+              // Add the milestone message only if it's a recognized step completion
+              if (step?.includes('generate') || step?.includes('execute') || step?.includes('classification')) { // Simplified check
                   setMessages(prev => [...prev, { 
                       id: generateId(), 
                       role: 'milestone', 
@@ -159,12 +179,11 @@ export function useChat() {
 
         case 'classifier_info':
             if (typeof lastJsonMessage.content === 'string' && lastJsonMessage.content.trim() !== '') {
-                 // --- EDIT: Assign to new variable first ---
                  const messageContent = lastJsonMessage.content; 
                  setMessages(prev => [...prev, { 
                      id: generateId(), 
                      role: 'assistant', 
-                     content: messageContent // Use the new variable
+                     content: messageContent 
                  }]);
                  setCurrentStatus("Planning workflow..."); 
             } else {
@@ -174,12 +193,11 @@ export function useChat() {
             
         case 'classifier_answer':
              if (typeof lastJsonMessage.content === 'string' && lastJsonMessage.content.trim() !== '') {
-                 // --- EDIT: Assign to new variable first ---
                  const messageContent = lastJsonMessage.content; 
                  setMessages(prev => [...prev, { 
                      id: generateId(), 
                      role: 'assistant', 
-                     content: messageContent // Use the new variable
+                     content: messageContent 
                  }]);
                  setCurrentStatus(null); 
                  setIsProcessing(false);
@@ -194,7 +212,17 @@ export function useChat() {
           // Add reasoning to the *last* milestone message associated with this step
           if (step && lastJsonMessage.reasoning) {
             const reasoningText = `**Reasoning:**\n${lastJsonMessage.reasoning}`; 
-            updateLastMilestone(step, { reasoning: reasoningText });
+            // Find the most recent milestone for this step and update it
+            // This assumes milestones are added *before* reasoning arrives
+            setMessages(prev => {
+                const lastMilestoneIndex = prev.findLastIndex(m => m.role === 'milestone' && m.step === step);
+                if (lastMilestoneIndex !== -1) {
+                    const updatedMessages = [...prev];
+                    updatedMessages[lastMilestoneIndex] = { ...updatedMessages[lastMilestoneIndex], reasoning: reasoningText };
+                    return updatedMessages;
+                }
+                return prev; // No matching milestone found
+            });
           }
           break;
 
@@ -214,7 +242,6 @@ export function useChat() {
           
           if (insightSuggestions.length > 0) {
             console.log("Received graph suggestions within final_insight:", insightSuggestions);
-            // Cast received data to GraphSuggestion[] before setting state
             setGraphSuggestions(insightSuggestions as GraphSuggestion[]); 
           } else {
             console.log("No graph suggestions found in final_insight message.");
@@ -226,59 +253,58 @@ export function useChat() {
 
         case 'final_recommendation':
            // Handle final recommendations message
-           // Expects report_sections now
            const reportSections = lastJsonMessage.report_sections;
            const reportReasoning = lastJsonMessage.reasoning;
-           // Also check for graph suggestions within the final message
            const suggestions = lastJsonMessage.graph_suggestions;
            if (suggestions && Array.isArray(suggestions)) {
               console.log("Received graph suggestions within final_recommendation:", suggestions);
-              // Cast received data to GraphSuggestion[] before setting state
-              setGraphSuggestions(suggestions as GraphSuggestion[]); // Update state with the list
+              setGraphSuggestions(suggestions as GraphSuggestion[]); 
            } else {
-              // Optional: Clear suggestions if none are provided with the final report
-              // setGraphSuggestions([]); 
               console.log("No graph suggestions found in final_recommendation message.");
            }
            
-           // Add final assistant message
            setMessages(prev => [...prev, {
                id: generateId(),
                role: 'assistant',
-               // Provide fallback content if sections are missing
                content: reportSections ? `Optimization report generated with ${reportSections.length} sections.` : 'Optimization report received.', 
-               reportSections: reportSections, // Store the structured data
+               reportSections: reportSections, 
                reasoning: reportReasoning ? `**Final Reasoning:**\n${reportReasoning}` : undefined,
-               step: step // Optional: associate with final step
+               step: step 
            }]);
-           // Optimization workflow might not send graph suggestions with the final message
-           // Clear old suggestions or handle based on backend logic
-           // setGraphSuggestions([]); // Optional: Clear suggestions here if they only come from insight
            setCurrentStatus(null); 
            setIsProcessing(false); 
            break;
 
         case 'graph_suggestions': // This is the primary handler now
           console.log("Received graph suggestions list:", lastJsonMessage.graph_suggestions);
-          // Cast received data to GraphSuggestion[] before setting state
           setGraphSuggestions((lastJsonMessage.graph_suggestions || []) as GraphSuggestion[]); // Update state with the list
           break;
 
-        case 'query_result': 
-           if (lastJsonMessage.objective && lastJsonMessage.query) {
-               const newResult: QueryResult = {
-                   objective: lastJsonMessage.objective,
-                   query: lastJsonMessage.query,
-                   dataframe: lastJsonMessage.data,
-                   error: lastJsonMessage.error,
-               };
-               setQueryResults(prev => [...prev, newResult]); // Update data pane state
-           }
-           break;
+        case 'query_result':
+          // This handles the raw data for the right-hand pane (tables)
+          const queryResult: QueryResult = {
+            objective: lastJsonMessage.objective || 'Unknown Objective',
+            query: lastJsonMessage.query || 'Unknown Query',
+            dataframe: lastJsonMessage.data || [], 
+            error: lastJsonMessage.error,
+          };
+          console.log("[useChat] Processing query_result:", queryResult); // Log before state update
+          setQueryResults(prev => {
+              console.log("[useChat] queryResults state BEFORE update:", prev); // Log previous state
+              // Avoid duplicates based on objective AND query string
+              const exists = prev.some(qr => qr.objective === queryResult.objective && qr.query === queryResult.query);
+              if (!exists) {
+                  const newState = [...prev, queryResult];
+                  console.log("[useChat] queryResults state AFTER update (adding new):", newState);
+                  return newState;
+              }
+              console.log("[useChat] queryResults state AFTER update (duplicate skipped):", prev);
+              return prev; // If duplicate, return previous state
+          });
+          break;
 
         case 'routing_decision': // Handle routing info if needed
             console.log('Routing decision:', lastJsonMessage);
-            // You could potentially display this info or use workflow_type
             break;
 
         case 'error':
@@ -294,85 +320,136 @@ export function useChat() {
     }
   }, [lastJsonMessage]); // Rerun when a new message arrives
 
-  // --- Send message function --- 
-  const sendMessage = useCallback((message: string) => {
-    if (readyState === ReadyState.OPEN) {
-      if (!message.trim()) return; 
-     
-      // --- EDIT: Updated parsing logic to add two messages ---
-      let contextMessageToAdd: ChatMessage | null = null;
-      let userMessageContent = message; 
-
-      // --- EDIT: Define new markers ---
-      const displayContextStartMarker = "---DISPLAY_CONTEXT START---";
-      const displayContextEndMarker = "---DISPLAY_CONTEXT END---";
-      const queryStartMarker = "---QUERY START---";
-
-      // Check if the message contains our structured context/query format
-      if (message.includes(displayContextStartMarker) && message.includes(queryStartMarker)) {
-        try {
-            // Extract the query
-            const queryStartIndex = message.indexOf(queryStartMarker) + queryStartMarker.length;
-            userMessageContent = message.substring(queryStartIndex).trim(); 
-
-            // Extract the display context string
-            const displayContextStartIndex = message.indexOf(displayContextStartMarker) + displayContextStartMarker.length;
-            const displayContextEndIndex = message.indexOf(displayContextEndMarker, displayContextStartIndex); 
-            
-            if (displayContextEndIndex !== -1 && displayContextEndIndex > displayContextStartIndex) {
-                const displayContextString = message.substring(displayContextStartIndex, displayContextEndIndex).trim(); 
-                if (displayContextString) {
-                    // --- EDIT: Create context message using the display string ---
-                    contextMessageToAdd = {
-                        id: generateId(),
-                        role: 'context_info',
-                        content: displayContextString // Use the display string for UI
-                    };
-                }
-            } else {
-                console.warn("Couldn't find display context markers or context was empty.");
-            }
-
-            // We don't need to extract the backend context here, 
-            // as the original 'message' containing it is sent to the backend.
-
-        } catch (e) {
-            console.error("Error parsing context/query message:", e);
-            userMessageContent = message; // Fallback to original message
-            contextMessageToAdd = null;
-        }
-      } 
-      // --- End Parsing Edit ---
-
-      // Add messages to state
-      setMessages(prev => {
-          const newMessages: ChatMessage[] = [];
-          if (contextMessageToAdd) {
-              newMessages.push(contextMessageToAdd); // Add context message first
-          }
-          // Add the user query message
-          newMessages.push({
-              id: generateId(), // Unique ID for user message
-              role: 'user',
-              content: userMessageContent // Use the parsed query content
-          });
-          return [...prev, ...newMessages]; // Append new message(s)
-      });
-      
-      // Reset UI states
-      setQueryResults([]); 
-      setCurrentStatus('Processing...'); 
-      setIsProcessing(true); 
-      
-      // Send the ORIGINAL combined message to backend
-      sendWebSocketMessage(message); 
-
-    } else {
-      console.error('Cannot send message, WebSocket is not open. State:', ReadyState[readyState]);
-      setMessages(prev => [...prev, { id: generateId(), role: 'system', content: 'Error: Could not connect to the assistant. Please check the backend server.' }]);
-      setIsProcessing(false); // Reset if connection fails
+  // --- Send message function (Modified to use API proxy and handle direct responses) --- 
+  const sendMessage = useCallback(async (message: string) => {
+    if (readyState !== ReadyState.OPEN) {
+      console.error('Cannot send message, WebSocket is not open.');
+      setMessages(prev => [...prev, { id: generateId(), role: 'system', content: 'Error: Cannot connect to assistant. Backend connection is closed.' }]);
+      setIsProcessing(false); 
+      return;
     }
-  }, [readyState, sendWebSocketMessage]); // Dependencies
+
+    if (!userId) {
+      console.error('Cannot send message, user ID not yet received from WebSocket.');
+      setMessages(prev => [...prev, { id: generateId(), role: 'system', content: 'Error: Connection established, but user ID not received yet. Please wait a moment and try again.' }]);
+      setIsProcessing(false);
+      return;
+    }
+    
+    if (!message.trim()) return; 
+   
+    // Preserve existing context parsing logic
+    let contextMessageToAdd: ChatMessage | null = null;
+    let userMessageContent = message; 
+    const displayContextStartMarker = "---DISPLAY_CONTEXT START---";
+    const displayContextEndMarker = "---DISPLAY_CONTEXT END---";
+    const queryStartMarker = "---QUERY START---";
+
+    if (message.includes(displayContextStartMarker) && message.includes(queryStartMarker)) {
+      try {
+          const queryStartIndex = message.indexOf(queryStartMarker) + queryStartMarker.length;
+          userMessageContent = message.substring(queryStartIndex).trim(); 
+          const displayContextStartIndex = message.indexOf(displayContextStartMarker) + displayContextStartMarker.length;
+          const displayContextEndIndex = message.indexOf(displayContextEndMarker, displayContextStartIndex); 
+          
+          if (displayContextEndIndex !== -1 && displayContextEndIndex > displayContextStartIndex) {
+              const displayContextString = message.substring(displayContextStartIndex, displayContextEndIndex).trim(); 
+              if (displayContextString) {
+                  contextMessageToAdd = {
+                      id: generateId(),
+                      role: 'context_info',
+                      content: displayContextString
+                  };
+              }
+          } else {
+              console.warn("Couldn't find display context markers or context was empty.");
+          }
+      } catch (e) {
+          console.error("Error parsing context/query message:", e);
+          userMessageContent = message; 
+          contextMessageToAdd = null;
+      }
+    } 
+
+    // Add UI messages immediately
+    setMessages(prev => {
+        const newMessages: ChatMessage[] = [];
+        if (contextMessageToAdd) {
+            newMessages.push(contextMessageToAdd); 
+        }
+        newMessages.push({
+            id: generateId(), 
+            role: 'user',
+            content: userMessageContent 
+        });
+        return [...prev, ...newMessages];
+    });
+    
+    // Reset UI states for processing - Start with Thinking...
+    setQueryResults([]); 
+    setGraphSuggestions([]); 
+    setCurrentStatus('Thinking...'); 
+    setIsProcessing(true); 
+    
+    // Send the ORIGINAL message (with potential context markers) 
+    // to the frontend API proxy route
+    try {
+      const response = await fetch('/api/frontend/chat', { // Use the relative path to our proxy
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message: message, // Send the original message string
+          userId: userId  // Send the stored user ID
+        }),
+      });
+
+      if (!response.ok) {
+        // Handle HTTP errors from the proxy/agent
+        const errorData = await response.json().catch(() => ({ error: `HTTP error ${response.status}` })); // Graceful JSON parsing
+        console.error('Error response from /api/frontend/chat:', errorData);
+        const errorContent = `Error sending message to agent: ${errorData.detail || errorData.error || response.statusText}`;
+        setMessages(prev => [...prev, { id: generateId(), role: 'system', content: errorContent }]);
+        setCurrentStatus(null);
+        setIsProcessing(false);
+      } else {
+        // Handle successful response from the proxy/agent
+        const agentAckData = await response.json(); 
+        console.log("Agent acknowledgement:", agentAckData);
+        
+        // Add the agent's text response immediately
+        if (agentAckData.response) {
+            setMessages(prev => [...prev, { 
+                id: generateId(), 
+                role: 'assistant', 
+                content: agentAckData.response 
+            }]);
+        }
+
+        // Decide whether to keep processing based on whether a tool was called
+        if (agentAckData.tool_called) {
+            // Tool was called, keep processing status, expect WebSocket updates
+            setCurrentStatus('Agent processing workflow...'); 
+        } else {
+            // No tool called, agent answered directly. Clear status.
+            setCurrentStatus(null);
+            setIsProcessing(false);
+        }
+      }
+    } catch (error) {
+      // Handle network errors or other issues calling the proxy
+      console.error('Failed to fetch /api/frontend/chat:', error);
+      let errorText = 'Network error connecting to the agent.';
+      if (error instanceof Error) {
+        errorText = error.message;
+      }
+      setMessages(prev => [...prev, { id: generateId(), role: 'system', content: `Error: ${errorText}` }]);
+      setCurrentStatus(null);
+      setIsProcessing(false);
+    }
+
+  }, [readyState, userId]); // Add userId as a dependency
 
   // Connection status string
   const connectionStatus = {
@@ -386,11 +463,12 @@ export function useChat() {
   return {
     messages,
     queryResults,
-    currentStatus, // Expose current status
-    isProcessing, // <<< EXPOSE isProcessing
-    graphSuggestions, // Expose list of graph suggestions
+    currentStatus,
+    isProcessing,
+    graphSuggestions,
     sendMessage,
     connectionStatus,
+    userId, // Expose userId if needed elsewhere
     readyState,
   };
 }

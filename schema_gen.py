@@ -3,9 +3,9 @@ from collections import defaultdict
 import os
 
 # === CONFIGURATION ===
-NEO4J_URI = "neo4j+s://2557c6ca.databases.neo4j.io"
+NEO4J_URI = "neo4j+s://13bcaa9b.databases.neo4j.io"
 NEO4J_USER = os.getenv("NEO4J_USER", "neo4j")
-NEO4J_PASSWORD = os.getenv("NEO4J_PASSWORD", "pg8JVNkM25tYoxJA9Gg4orjBu-mX0S5GaNAYJ8Xv2mU")
+NEO4J_PASSWORD = os.getenv("NEO4J_PASSWORD", "jtSyN5pLuXxSnlm937XFJkVej8GZ2tIn1NZwEWEH8FI")
 
 # === CONNECTOR CLASS ===
 class Neo4jSchemaExtractor:

@@ -71,6 +71,9 @@ const TablePlaceholderContent: React.FC = () => {
 };
 
 const TableViewer: React.FC<TableViewerProps> = ({ result, currentIndex, totalCount, onNext, onPrev, isProcessing, isInitialState, onSetPendingContext }) => {
+    // Log the received result prop
+    console.log(`[TableViewer] Rendering with result for index ${currentIndex}:`, result);
+    
     const [sorting, setSorting] = useState<SortingState>([]);
     const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
     const [isContextStaged, setIsContextStaged] = useState<boolean>(false);
