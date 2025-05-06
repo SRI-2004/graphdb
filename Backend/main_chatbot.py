@@ -44,7 +44,9 @@ from tools import (
     google_insight_trigger_tool,
     google_optimization_trigger_tool,
     facebook_insight_trigger_tool,
-    facebook_optimization_trigger_tool
+    facebook_optimization_trigger_tool,
+    general_insight_trigger_tool,
+    general_optimization_trigger_tool
 )
 
 tools = [
@@ -52,6 +54,8 @@ tools = [
     google_optimization_trigger_tool,
     facebook_insight_trigger_tool,
     facebook_optimization_trigger_tool,
+    general_insight_trigger_tool,
+    general_optimization_trigger_tool,
 ]
 
 if not tools:

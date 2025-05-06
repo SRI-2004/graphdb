@@ -670,11 +670,11 @@ async def run_workflow_background(
                 
                 # Execute each query
                 for i, query_obj in enumerate(generated_queries_list):
-                    objective = query_obj.get("objective", f"Query {i+1}")
+                    objective = query_obj.get("objective", f"{platform} Query {i+1}")
                     query = query_obj.get("query", "").strip()
                     
                     if not query:
-                        print(f"WARNING: Empty query for objective: {objective}")
+                        print(f"WARNING: Empty query for {platform} objective: {objective}")
                         continue
                     
                     # Update progress
@@ -683,7 +683,7 @@ async def run_workflow_background(
                         "workflow_id": workflow_id,
                         "step": "execute_query", 
                         "status": "in_progress",
-                        "details": f"Executing query for: {objective}",
+                        "details": f"Executing {platform} query for: {objective}",
                         "current": i + 1,
                         "total": len(generated_queries_list)
                     })
@@ -707,6 +707,7 @@ async def run_workflow_background(
                             
                             # Store the modified result with its objective
                             query_result = {
+                            "platform": platform,
                             "objective": objective,
                                 "query": query,
                                 "data": data # Now contains stringified dates/times
@@ -714,21 +715,17 @@ async def run_workflow_background(
                             all_query_results.append(query_result)
                         
                             # Send individual query result (with stringified dates) to frontend
-                            await connection_manager.send_json(user_id, {
-                            "type": "query_result",
-                                "workflow_id": workflow_id,
-                                "objective": objective,
-                                "data": data # Send the modified data
-                            })
+                            await connection_manager.send_json(user_id, query_result)
                     
                     except Exception as query_err:
-                        print(f"ERROR executing query for {objective}: {query_err}")
+                        print(f"ERROR executing {platform} query for {objective}: {query_err}")
                         await connection_manager.send_json(user_id, {
                             "type": "error", 
                             "workflow_id": workflow_id,
                             "step": "execute_query",
+                            "platform": platform,
                             "objective": objective,
-                            "message": f"Error executing query: {query_err}"
+                            "message": f"Error executing {platform} query: {query_err}"
                         })
                 
                 # If we got here, mark execution as successful even if some queries failed
@@ -1060,6 +1057,610 @@ async def trigger_facebook_optimization(
         "status": "initiated",
         "workflow_id": workflow_id,
         "message": "Facebook Optimization workflow initiated. Results will be streamed via WebSocket."
+    }
+
+async def _execute_queries_on_driver(
+    queries_list: List[Dict],
+    driver: AsyncGraphDatabase.driver,
+    user_id: str,
+    workflow_id: str,
+    platform_name: str,
+    connection_manager: ConnectionManager
+) -> List[Dict]:
+    """
+    Helper function to execute a list of Cypher queries against a given Neo4j driver.
+    Sends progress updates via WebSocket.
+    Returns a list of query results, each including the platform name.
+    """
+    all_query_results_for_platform = [] # Renamed variable for clarity
+    if not queries_list:
+        await connection_manager.send_json(user_id, {
+            "type": "status",
+            "workflow_id": workflow_id,
+            "step": f"execute_{platform_name}_queries",
+            "status": "skipped",
+            "details": f"No queries to execute for {platform_name}."
+        })
+        return all_query_results_for_platform
+
+    await connection_manager.send_json(user_id, {
+        "type": "status",
+        "workflow_id": workflow_id,
+        "step": f"execute_{platform_name}_queries",
+        "status": "in_progress",
+        "details": f"Executing {len(queries_list)} {platform_name} database queries..."
+    })
+
+    from neo4j.time import Date, DateTime, Time
+    from datetime import date, datetime, time
+
+    for i, query_obj in enumerate(queries_list):
+        objective = query_obj.get("objective", f"{platform_name} Query {i+1}")
+        query_str = query_obj.get("query", "").strip() # Renamed to query_str to avoid conflict with query var name
+
+        if not query_str:
+            print(f"WARNING: Empty query for {platform_name} objective: {objective}")
+            continue
+
+        await connection_manager.send_json(user_id, {
+            "type": "status",
+            "workflow_id": workflow_id,
+            "step": f"execute_{platform_name}_query_detail",
+            "status": "in_progress",
+            "details": f"Executing {platform_name} query for: {objective}",
+            "current": i + 1,
+            "total": len(queries_list)
+        })
+
+        try:
+            async with driver.session() as session:
+                result = await session.run(query_str) # Use query_str
+                data = await result.data()
+
+                for record_dict in data:
+                    for key, value in record_dict.items():
+                        if isinstance(value, (Date, DateTime, Time, date, datetime, time)):
+                            record_dict[key] = str(value)
+                
+                # This is the dictionary that gets returned by the function in a list
+                collected_result = {
+                    "platform": platform_name, 
+                    "objective": objective, 
+                    "query": query_str, # Store the executed query string
+                    "data": data
+                }
+                all_query_results_for_platform.append(collected_result)
+
+                # This is the WebSocket message for individual query result (can stay as is)
+                await connection_manager.send_json(user_id, {
+                    "type": "query_result",
+                    "workflow_id": workflow_id,
+                    "platform": platform_name,
+                    "objective": objective,
+                    "data": data 
+                })
+        except Exception as query_err:
+            print(f"ERROR executing {platform_name} query for {objective}: {query_err}")
+            await connection_manager.send_json(user_id, {
+                "type": "error",
+                "workflow_id": workflow_id,
+                "step": f"execute_{platform_name}_query_detail",
+                "objective": objective,
+                "message": f"Error executing {platform_name} query: {query_err}"
+            })
+
+    await connection_manager.send_json(user_id, {
+        "type": "status",
+        "workflow_id": workflow_id,
+        "step": f"execute_{platform_name}_queries",
+        "status": "completed",
+        "details": f"Executed {len(all_query_results_for_platform)} of {len(queries_list)} {platform_name} queries."
+    })
+    return all_query_results_for_platform
+
+
+async def run_general_insight_workflow_background(
+    user_query: str,
+    user_id: str,
+    workflow_id: str
+):
+    """
+    Executes a combined insight workflow:
+    1. Gathers insights from Google.
+    2. Gathers insights from Facebook.
+    3. Combines results and uses an LLM for a final summary.
+    Sends all updates via WebSocket.
+    """
+    print(f"Starting general insight workflow: {workflow_id} for user {user_id}")
+    await connection_manager.send_json(user_id, {
+        "type": "status", "workflow_id": workflow_id, "step": "workflow_start",
+        "status": "in_progress", "details": "Starting general insight workflow..."
+    })
+
+    # Ensure necessary components are available
+    google_driver = app_state.get("google_neo4j_driver")
+    facebook_driver = app_state.get("facebook_neo4j_driver")
+    llm = app_state.get("llm")
+    google_components_available = app_state.get("google_components_available", False)
+    facebook_components_available = app_state.get("facebook_components_available", False)
+
+    if not (google_driver and facebook_driver and llm and google_components_available and facebook_components_available):
+        error_message = "General insight workflow cannot proceed due to missing components: "
+        if not google_driver: error_message += "Google Driver missing. "
+        if not facebook_driver: error_message += "Facebook Driver missing. "
+        if not llm: error_message += "LLM missing. "
+        if not google_components_available: error_message += "Google components not loaded. "
+        if not facebook_components_available: error_message += "Facebook components not loaded. "
+        
+        print(f"ERROR: {error_message}")
+        await connection_manager.send_json(user_id, {
+            "type": "error", "workflow_id": workflow_id, "step": "initialization",
+            "message": error_message
+        })
+        return
+
+    all_google_query_results = []
+    google_reasoning = "N/A"
+    all_facebook_query_results = []
+    facebook_reasoning = "N/A"
+    
+    final_insight_text = "Could not generate combined insight."
+    final_graph_suggestions = []
+
+    try:
+        # --- Step 1: Google Insight Data Gathering ---
+        await connection_manager.send_json(user_id, {
+            "type": "status", "workflow_id": workflow_id, "step": "google_data_gathering",
+            "status": "in_progress", "details": "Gathering data from Google..."
+        })
+        try:
+            from langchain_arch.chains.insight_workflow import InsightWorkflow as GoogleInsightWorkflow
+            google_workflow = GoogleInsightWorkflow(schema_file=google_schema_path_abs)
+            
+            google_generated_queries_raw = []
+            async for chunk in google_workflow.run(user_query):
+                chunk["workflow_id"] = workflow_id # Add workflow_id for context
+                if chunk.get("type") == "status" and chunk.get("step") == "generate_queries":
+                    await connection_manager.send_json(user_id, {**chunk, "details": f"Google: {chunk.get('details', '')}"})
+                    if chunk.get("status") == "completed":
+                        google_generated_queries_raw = chunk.get("generated_queries", [])
+                elif chunk.get("type") == "reasoning_summary" and chunk.get("step") == "generate_queries":
+                    google_reasoning = chunk.get("reasoning", "N/A")
+                    await connection_manager.send_json(user_id, {**chunk, "details": f"Google: {chunk.get('details', '')}", "reasoning": google_reasoning})
+                elif chunk.get("type") == "error":
+                     await connection_manager.send_json(user_id, {**chunk, "details": f"Google: {chunk.get('details', '')}"})
+                     raise Exception(chunk.get("message","Error in Google query generation"))
+            
+            # Prefix objectives for uniqueness
+            google_generated_queries_prefixed = [
+                {**q, 'objective': f"google: {q.get('objective', f'Query {i+1}')}"} 
+                for i, q in enumerate(google_generated_queries_raw)
+            ]
+
+            if google_generated_queries_prefixed:
+                all_google_query_results = await _execute_queries_on_driver(
+                    google_generated_queries_prefixed, google_driver, user_id, workflow_id, "google", connection_manager
+                )
+            await connection_manager.send_json(user_id, {
+                "type": "status", "workflow_id": workflow_id, "step": "google_data_gathering",
+                "status": "completed", "details": "Google data gathering complete."
+            })
+        except Exception as e:
+            print(f"ERROR during Google data gathering for general insight: {e}")
+            await connection_manager.send_json(user_id, {
+                "type": "error", "workflow_id": workflow_id, "step": "google_data_gathering",
+                "message": f"Error during Google data gathering: {e}"
+            })
+            # Decide if we should proceed or stop; for now, we'll try Facebook
+
+        # --- Step 2: Facebook Insight Data Gathering ---
+        await connection_manager.send_json(user_id, {
+            "type": "status", "workflow_id": workflow_id, "step": "facebook_data_gathering",
+            "status": "in_progress", "details": "Gathering data from Facebook..."
+        })
+        try:
+            from facebook_arch.chains.insight_workflow import InsightWorkflow as FacebookInsightWorkflow
+            facebook_workflow = FacebookInsightWorkflow(schema_file=facebook_schema_path_abs)
+
+            facebook_generated_queries_raw = []
+            async for chunk in facebook_workflow.run(user_query):
+                chunk["workflow_id"] = workflow_id
+                if chunk.get("type") == "status" and chunk.get("step") == "generate_queries":
+                    await connection_manager.send_json(user_id, {**chunk, "details": f"Facebook: {chunk.get('details', '')}"})
+                    if chunk.get("status") == "completed":
+                        facebook_generated_queries_raw = chunk.get("generated_queries", [])
+                elif chunk.get("type") == "reasoning_summary" and chunk.get("step") == "generate_queries":
+                    facebook_reasoning = chunk.get("reasoning", "N/A")
+                    await connection_manager.send_json(user_id, {**chunk, "details": f"Facebook: {chunk.get('details', '')}", "reasoning": facebook_reasoning})
+                elif chunk.get("type") == "error":
+                    await connection_manager.send_json(user_id, {**chunk, "details": f"Facebook: {chunk.get('details', '')}"})
+                    raise Exception(chunk.get("message","Error in Facebook query generation"))
+            
+            # Prefix objectives for uniqueness
+            facebook_generated_queries_prefixed = [
+                {**q, 'objective': f"facebook: {q.get('objective', f'Query {i+1}')}"} 
+                for i, q in enumerate(facebook_generated_queries_raw)
+            ]
+
+            if facebook_generated_queries_prefixed:
+                all_facebook_query_results = await _execute_queries_on_driver(
+                    facebook_generated_queries_prefixed, facebook_driver, user_id, workflow_id, "facebook", connection_manager
+                )
+            await connection_manager.send_json(user_id, {
+                "type": "status", "workflow_id": workflow_id, "step": "facebook_data_gathering",
+                "status": "completed", "details": "Facebook data gathering complete."
+            })
+        except Exception as e:
+            print(f"ERROR during Facebook data gathering for general insight: {e}")
+            await connection_manager.send_json(user_id, {
+                "type": "error", "workflow_id": workflow_id, "step": "facebook_data_gathering",
+                "message": f"Error during Facebook data gathering: {e}"
+            })
+
+        # --- Step 3: Combine Data & Generate Final Insight ---
+        if not all_google_query_results and not all_facebook_query_results:
+            final_insight_text = "No data was found from Google or Facebook for your query."
+            await connection_manager.send_json(user_id, {
+                "type": "status", "workflow_id": workflow_id, "step": "combined_analysis",
+                "status": "skipped", "details": final_insight_text
+            })
+        else:
+            await connection_manager.send_json(user_id, {
+                "type": "status", "workflow_id": workflow_id, "step": "combined_analysis",
+                "status": "in_progress", "details": "Combining data and generating final insight..."
+            })
+            
+            combined_query_results = all_google_query_results + all_facebook_query_results # These now have prefixed objectives
+            combined_reasoning = f"""Google Reasoning:
+{google_reasoning}
+
+Facebook Reasoning:
+{facebook_reasoning}"""
+
+            try:
+                # Use InsightGeneratorAgent (e.g., from langchain_arch)
+                from langchain_arch.agents.insight_generator import InsightGeneratorAgent
+                insight_agent = InsightGeneratorAgent() # Assuming default init is fine
+                
+                insight_agent_output = await insight_agent.run(
+                    query=user_query,
+                    data=combined_query_results,
+                    user_id=user_id, # Pass user_id if agent uses it
+                    query_generation_reasoning=combined_reasoning
+                )
+                
+                if isinstance(insight_agent_output, dict) and "insight" in insight_agent_output:
+                    final_insight_text = insight_agent_output["insight"]
+                elif isinstance(insight_agent_output, str): # Basic fallback
+                     final_insight_text = insight_agent_output
+                else:
+                    print(f"Warning: Insight agent returned unexpected output: {insight_agent_output}")
+                    final_insight_text = "Failed to generate a combined insight summary."
+
+                # Graph Suggestions
+                from langchain_arch.agents.graph_generator import GraphGeneratorAgent
+                graph_agent = GraphGeneratorAgent()
+                # Pass combined results (with prefixed objectives) to graph agent
+                graph_agent_input = {"query": user_query, "data": combined_query_results} 
+                graph_agent_output = await graph_agent.chain.ainvoke(graph_agent_input)
+                if isinstance(graph_agent_output, dict) and 'graph_suggestions' in graph_agent_output:
+                    # Ensure graph agent associates suggestions with the prefixed objectives
+                    # (This assumes the agent's prompt guides it or it picks up the objective field correctly)
+                    final_graph_suggestions = graph_agent_output['graph_suggestions']
+
+            except Exception as e:
+                print(f"ERROR during combined analysis: {e}")
+                import traceback
+                tb_str = traceback.format_exc()
+                await connection_manager.send_json(user_id, {
+                    "type": "error", "workflow_id": workflow_id, "step": "combined_analysis",
+                    "message": f"Error during combined analysis: {e}", "details": tb_str
+                })
+
+        # --- Step 4: Send Final Result ---
+        await connection_manager.send_json(user_id, {
+            "type": "final_insight", # Consistent with other insight messages
+            "workflow_id": workflow_id,
+            "insight": final_insight_text,
+            "graph_suggestions": final_graph_suggestions,
+            "query_generation_reasoning": combined_reasoning, # Send combined reasoning
+            "executed_queries": combined_query_results, # Add all executed query data
+            "raw_google_results_count": len(all_google_query_results),
+            "raw_facebook_results_count": len(all_facebook_query_results)
+        })
+
+    except Exception as e:
+        # Broad exception for the whole workflow
+        print(f"CRITICAL: Unhandled error in run_general_insight_workflow_background: {e}")
+        import traceback
+        tb_str = traceback.format_exc()
+        await connection_manager.send_json(user_id, {
+            "type": "error", "workflow_id": workflow_id, "step": "workflow_execution",
+            "message": f"Critical error during general insight workflow: {e}", "details": tb_str
+        })
+    finally:
+        await connection_manager.send_json(user_id, {
+            "type": "status", "workflow_id": workflow_id, "step": "workflow_end",
+            "status": "completed", "details": "General insight workflow processing completed."
+        })
+        print(f"General insight workflow {workflow_id} for user {user_id} completed.")
+
+
+@app.post("/api/v1/workflows/trigger/general_insight", response_model=TriggerResponse)
+async def trigger_general_insight(
+    request: WorkflowTriggerRequest,
+    background_tasks: BackgroundTasks
+):
+    """Trigger a General Insight workflow combining Google and Facebook data."""
+    workflow_id = f"general-insight-{uuid.uuid4()}"
+    background_tasks.add_task(
+        run_general_insight_workflow_background,
+        user_query=request.query,
+        user_id=request.user_id,
+        workflow_id=workflow_id
+    )
+    return {
+        "status": "initiated",
+        "workflow_id": workflow_id,
+        "message": "General Insight workflow initiated. Results will be streamed via WebSocket."
+    }
+
+async def run_general_optimization_workflow_background(
+    user_query: str,
+    user_id: str,
+    workflow_id: str
+):
+    """
+    Executes a combined optimization workflow:
+    1. Gathers optimization recommendations from Google.
+    2. Gathers optimization recommendations from Facebook.
+    3. Combines results and uses an LLM for a final recommendation.
+    Sends all updates via WebSocket.
+    """
+    print(f"Starting general optimization workflow: {workflow_id} for user {user_id}")
+    await connection_manager.send_json(user_id, {
+        "type": "status", "workflow_id": workflow_id, "step": "workflow_start",
+        "status": "in_progress", "details": "Starting general optimization workflow..."
+    })
+
+    # Ensure necessary components are available
+    google_driver = app_state.get("google_neo4j_driver")
+    facebook_driver = app_state.get("facebook_neo4j_driver")
+    llm = app_state.get("llm")
+    google_components_available = app_state.get("google_components_available", False)
+    facebook_components_available = app_state.get("facebook_components_available", False)
+
+    if not (google_driver and facebook_driver and llm and google_components_available and facebook_components_available):
+        error_message = "General optimization workflow cannot proceed due to missing components: "
+        if not google_driver: error_message += "Google Driver missing. "
+        if not facebook_driver: error_message += "Facebook Driver missing. "
+        if not llm: error_message += "LLM missing. "
+        if not google_components_available: error_message += "Google components not loaded. "
+        if not facebook_components_available: error_message += "Facebook components not loaded. "
+        
+        print(f"ERROR: {error_message}")
+        await connection_manager.send_json(user_id, {
+            "type": "error", "workflow_id": workflow_id, "step": "initialization",
+            "message": error_message
+        })
+        return
+
+    all_google_query_results = []
+    google_reasoning = "N/A"
+    all_facebook_query_results = []
+    facebook_reasoning = "N/A"
+    
+    final_report_sections = []
+    final_graph_suggestions = []
+
+    try:
+        # --- Step 1: Google Optimization Data Gathering ---
+        await connection_manager.send_json(user_id, {
+            "type": "status", "workflow_id": workflow_id, "step": "google_data_gathering",
+            "status": "in_progress", "details": "Gathering data from Google for optimization..."
+        })
+        try:
+            from langchain_arch.chains.optimization_workflow import OptimizationWorkflow as GoogleOptimizationWorkflow
+            google_workflow = GoogleOptimizationWorkflow(schema_file=google_schema_path_abs)
+            
+            google_generated_queries_raw = []
+            async for chunk in google_workflow.run(user_query):
+                chunk["workflow_id"] = workflow_id # Add workflow_id for context
+                if chunk.get("type") == "status" and chunk.get("step") == "generate_queries":
+                    await connection_manager.send_json(user_id, {**chunk, "details": f"Google: {chunk.get('details', '')}"})
+                    if chunk.get("status") == "completed":
+                        google_generated_queries_raw = chunk.get("generated_queries", [])
+                elif chunk.get("type") == "reasoning_summary" and chunk.get("step") == "generate_queries":
+                    google_reasoning = chunk.get("reasoning", "N/A")
+                    await connection_manager.send_json(user_id, {**chunk, "details": f"Google: {chunk.get('details', '')}", "reasoning": google_reasoning})
+                elif chunk.get("type") == "error":
+                     await connection_manager.send_json(user_id, {**chunk, "details": f"Google: {chunk.get('details', '')}"})
+                     raise Exception(chunk.get("message","Error in Google query generation"))
+            
+            # Prefix objectives for uniqueness
+            google_generated_queries_prefixed = [
+                {**q, 'objective': f"google: {q.get('objective', f'Query {i+1}')}"} 
+                for i, q in enumerate(google_generated_queries_raw)
+            ]
+
+            if google_generated_queries_prefixed:
+                all_google_query_results = await _execute_queries_on_driver(
+                    google_generated_queries_prefixed, google_driver, user_id, workflow_id, "google", connection_manager
+                )
+            await connection_manager.send_json(user_id, {
+                "type": "status", "workflow_id": workflow_id, "step": "google_data_gathering",
+                "status": "completed", "details": "Google data gathering for optimization complete."
+            })
+        except Exception as e:
+            print(f"ERROR during Google data gathering for general optimization: {e}")
+            await connection_manager.send_json(user_id, {
+                "type": "error", "workflow_id": workflow_id, "step": "google_data_gathering",
+                "message": f"Error during Google data gathering: {e}"
+            })
+            # Decide if we should proceed or stop; for now, we'll try Facebook
+
+        # --- Step 2: Facebook Optimization Data Gathering ---
+        await connection_manager.send_json(user_id, {
+            "type": "status", "workflow_id": workflow_id, "step": "facebook_data_gathering",
+            "status": "in_progress", "details": "Gathering data from Facebook for optimization..."
+        })
+        try:
+            from facebook_arch.chains.optimization_workflow import OptimizationWorkflow as FacebookOptimizationWorkflow
+            facebook_workflow = FacebookOptimizationWorkflow(schema_file=facebook_schema_path_abs)
+
+            facebook_generated_queries_raw = []
+            async for chunk in facebook_workflow.run(user_query):
+                chunk["workflow_id"] = workflow_id
+                if chunk.get("type") == "status" and chunk.get("step") == "generate_queries":
+                    await connection_manager.send_json(user_id, {**chunk, "details": f"Facebook: {chunk.get('details', '')}"})
+                    if chunk.get("status") == "completed":
+                        facebook_generated_queries_raw = chunk.get("generated_queries", [])
+                elif chunk.get("type") == "reasoning_summary" and chunk.get("step") == "generate_queries":
+                    facebook_reasoning = chunk.get("reasoning", "N/A")
+                    await connection_manager.send_json(user_id, {**chunk, "details": f"Facebook: {chunk.get('details', '')}", "reasoning": facebook_reasoning})
+                elif chunk.get("type") == "error":
+                    await connection_manager.send_json(user_id, {**chunk, "details": f"Facebook: {chunk.get('details', '')}"})
+                    raise Exception(chunk.get("message","Error in Facebook query generation"))
+            
+            # Prefix objectives for uniqueness
+            facebook_generated_queries_prefixed = [
+                {**q, 'objective': f"facebook: {q.get('objective', f'Query {i+1}')}"} 
+                for i, q in enumerate(facebook_generated_queries_raw)
+            ]
+
+            if facebook_generated_queries_prefixed:
+                all_facebook_query_results = await _execute_queries_on_driver(
+                    facebook_generated_queries_prefixed, facebook_driver, user_id, workflow_id, "facebook", connection_manager
+                )
+            await connection_manager.send_json(user_id, {
+                "type": "status", "workflow_id": workflow_id, "step": "facebook_data_gathering",
+                "status": "completed", "details": "Facebook data gathering for optimization complete."
+            })
+        except Exception as e:
+            print(f"ERROR during Facebook data gathering for general optimization: {e}")
+            await connection_manager.send_json(user_id, {
+                "type": "error", "workflow_id": workflow_id, "step": "facebook_data_gathering",
+                "message": f"Error during Facebook data gathering: {e}"
+            })
+
+        # --- Step 3: Combine Data & Generate Final Optimization Recommendations ---
+        if not all_google_query_results and not all_facebook_query_results:
+            final_report_text = "No data was found from Google or Facebook for your optimization query."
+            await connection_manager.send_json(user_id, {
+                "type": "status", "workflow_id": workflow_id, "step": "combined_analysis",
+                "status": "skipped", "details": final_report_text
+            })
+        else:
+            await connection_manager.send_json(user_id, {
+                "type": "status", "workflow_id": workflow_id, "step": "combined_analysis",
+                "status": "in_progress", "details": "Combining data and generating final optimization recommendations..."
+            })
+            
+            combined_query_results = all_google_query_results + all_facebook_query_results # These now have prefixed objectives
+            combined_reasoning = f"""Google Reasoning:
+{google_reasoning}
+
+Facebook Reasoning:
+{facebook_reasoning}"""
+
+            try:
+                # Use OptimizationRecommendationGeneratorAgent (e.g., from langchain_arch)
+                # For now, we'll use the Google one as there isn't a specific combined one
+                from langchain_arch.agents.optimization_generator import OptimizationRecommendationGeneratorAgent as GoogleOptimizationAgent
+                optimization_agent = GoogleOptimizationAgent() # Assuming default init is fine
+                
+                # Prepare data in the expected format
+                # The optimization agent expects a data parameter with grouped results by objective
+                grouped_results = {}
+                for result_item in combined_query_results:
+                    objective = result_item.get("objective", "Unknown Objective")
+                    if objective not in grouped_results:
+                        grouped_results[objective] = []
+                    if result_item.get('data') is not None and isinstance(result_item['data'], list):
+                        grouped_results[objective].extend(result_item['data'])
+                
+                # Call the optimization agent with the correct parameters
+                optimization_agent_output = await optimization_agent.run(
+                    query=user_query,
+                    data=grouped_results,
+                    user_id=user_id
+                )
+                
+                if isinstance(optimization_agent_output, dict) and "report_sections" in optimization_agent_output:
+                    final_report_sections = optimization_agent_output["report_sections"]
+                else:
+                    print(f"Warning: Optimization agent returned unexpected output: {optimization_agent_output}")
+                    # Fallback to a simple structure
+                    final_report_sections = [{
+                        "title": "Combined Optimization Recommendations",
+                        "content": "Unable to generate structured recommendations from the combined data."
+                    }]
+
+                # Graph Suggestions
+                from langchain_arch.agents.graph_generator import GraphGeneratorAgent
+                graph_agent = GraphGeneratorAgent()
+                # Pass combined results (with prefixed objectives) to graph agent
+                graph_agent_input = {"query": user_query, "data": combined_query_results} 
+                graph_agent_output = await graph_agent.chain.ainvoke(graph_agent_input)
+                if isinstance(graph_agent_output, dict) and 'graph_suggestions' in graph_agent_output:
+                    # Ensure graph agent associates suggestions with the prefixed objectives
+                    final_graph_suggestions = graph_agent_output['graph_suggestions']
+
+            except Exception as e:
+                print(f"ERROR during combined optimization analysis: {e}")
+                import traceback
+                tb_str = traceback.format_exc()
+                await connection_manager.send_json(user_id, {
+                    "type": "error", "workflow_id": workflow_id, "step": "combined_analysis",
+                    "message": f"Error during combined optimization analysis: {e}", "details": tb_str
+                })
+
+        # --- Step 4: Send Final Result ---
+        await connection_manager.send_json(user_id, {
+            "type": "final_recommendation", # Consistent with single-platform optimization messages
+            "workflow_id": workflow_id,
+            "report_sections": final_report_sections,
+            "graph_suggestions": final_graph_suggestions,
+            "query_generation_reasoning": combined_reasoning, # Send combined reasoning
+            "executed_queries": combined_query_results, # Add all executed query data
+            "raw_google_results_count": len(all_google_query_results),
+            "raw_facebook_results_count": len(all_facebook_query_results)
+        })
+
+    except Exception as e:
+        # Broad exception for the whole workflow
+        print(f"CRITICAL: Unhandled error in run_general_optimization_workflow_background: {e}")
+        import traceback
+        tb_str = traceback.format_exc()
+        await connection_manager.send_json(user_id, {
+            "type": "error", "workflow_id": workflow_id, "step": "workflow_execution",
+            "message": f"Critical error during general optimization workflow: {e}", "details": tb_str
+        })
+    finally:
+        await connection_manager.send_json(user_id, {
+            "type": "status", "workflow_id": workflow_id, "step": "workflow_end",
+            "status": "completed", "details": "General optimization workflow processing completed."
+        })
+        print(f"General optimization workflow {workflow_id} for user {user_id} completed.")
+
+
+@app.post("/api/v1/workflows/trigger/general_optimization", response_model=TriggerResponse)
+async def trigger_general_optimization(
+    request: WorkflowTriggerRequest,
+    background_tasks: BackgroundTasks
+):
+    """Trigger a General Optimization workflow combining Google and Facebook data."""
+    workflow_id = f"general-optimization-{uuid.uuid4()}"
+    background_tasks.add_task(
+        run_general_optimization_workflow_background,
+        user_query=request.query,
+        user_id=request.user_id,
+        workflow_id=workflow_id
+    )
+    return {
+        "status": "initiated",
+        "workflow_id": workflow_id,
+        "message": "General Optimization workflow initiated. Results will be streamed via WebSocket."
     }
 
 # --- Run the app (for local development) --- 
