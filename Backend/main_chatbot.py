@@ -198,6 +198,11 @@ class AgentApiResponse(BaseModel):
     response: str
     tool_called: bool
 
+
+@app.get("/")  # or .head("/")
+async def root():
+    return {"status": "ok"}
+
 @app.post("/api/chat", response_model=AgentApiResponse)
 async def chat(request: ChatRequest):
     try:
