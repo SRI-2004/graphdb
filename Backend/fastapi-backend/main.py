@@ -164,18 +164,44 @@ class TriggerResponse(BaseModel):
 
 # Import Router and Agents here, after setting sys.path
 try:
+    # Import from langchain_arch
     from langchain_openai import ChatOpenAI # Import LLM
     from langchain_arch.chains.router import Router
-    # Import final agents
+    # Import final agents from langchain_arch
     from langchain_arch.agents.insight_generator import InsightGeneratorAgent
     from langchain_arch.agents.optimization_generator import OptimizationRecommendationGeneratorAgent
     from langchain_arch.agents.graph_generator import GraphGeneratorAgent # Import the new agent
     from langchain_arch.agents.classifier import ClassifierAgent # Import the ClassifierAgent
-    # Import workflow classes
+    # Import workflow classes from langchain_arch
     from langchain_arch.chains.insight_workflow import InsightWorkflow
     from langchain_arch.chains.optimization_workflow import OptimizationWorkflow
+    
+    # For google components status tracking
+    google_components_available = True
 except ImportError as e:
-    print(f"ERROR: Failed to import Router, Agents, or Workflows: {e}. Ensure langchain_arch is in the Python path ({project_root}) and dependencies are installed.")
+    print(f"ERROR: Failed to import Google components from langchain_arch: {e}. Ensure langchain_arch is in the Python path ({project_root}) and dependencies are installed.")
+    google_components_available = False
+    # Don't exit here, try to load facebook components first
+
+# Also try to import Facebook components (don't exit on failure)
+try:
+    # Import final agents from facebook_arch
+    from facebook_arch.agents.insight_generator import InsightGeneratorAgent as FacebookInsightAgent
+    from facebook_arch.agents.optimization_generator import OptimizationRecommendationGeneratorAgent as FacebookOptimizationAgent
+    # Import workflow classes from facebook_arch
+    from facebook_arch.chains.insight_workflow import InsightWorkflow as FacebookInsightWorkflow
+    from facebook_arch.chains.optimization_workflow import OptimizationWorkflow as FacebookOptimizationWorkflow
+    
+    # For facebook components status tracking
+    facebook_components_available = True
+    print("Successfully imported Facebook components from facebook_arch.")
+except ImportError as e:
+    print(f"WARNING: Failed to import Facebook components from facebook_arch: {e}. Facebook-specific optimizations will not be available.")
+    facebook_components_available = False
+
+# Exit if neither Google nor Facebook components are available
+if not google_components_available and not facebook_components_available:
+    print(f"FATAL: Neither Google nor Facebook components could be loaded. Ensure at least one architecture is properly installed.")
     sys.exit(1)
 
 @app.on_event("startup")
@@ -250,6 +276,13 @@ async def startup_event():
         print("Classifier agent initialized successfully.")
     except Exception as e:
         print(f"ERROR: Failed to initialize classifier agent: {e}")
+    
+    # Add status tracking to app_state
+    app_state["google_components_available"] = google_components_available
+    app_state["facebook_components_available"] = facebook_components_available
+    
+    # Log component availability
+    print(f"Components availability: Google={google_components_available}, Facebook={facebook_components_available}")
 
 @app.on_event("shutdown")
 async def shutdown_event():
@@ -515,12 +548,51 @@ async def run_workflow_background(
                 print(f"---> Starting Query Generation via {final_workflow_type} workflow for {platform} platform...")
                 workflow_instance = None
         
-                if final_workflow_type == "insight":
-                    workflow_instance = InsightWorkflow(schema_file=selected_schema_path) 
-                elif final_workflow_type == "optimization":
-                    workflow_instance = OptimizationWorkflow(schema_file=selected_schema_path)
+                if platform == "google":
+                    # For Google, use workflows from langchain_arch
+                    if not app_state.get("google_components_available", False):
+                        raise ImportError("Google components were not successfully imported during startup")
+                        
+                    from langchain_arch.chains.insight_workflow import InsightWorkflow as GoogleInsightWorkflow
+                    from langchain_arch.chains.optimization_workflow import OptimizationWorkflow as GoogleOptimizationWorkflow
+                    
+                    if final_workflow_type == "insight":
+                        workflow_instance = GoogleInsightWorkflow(schema_file=selected_schema_path) 
+                        print(f"Using GoogleInsightWorkflow from langchain_arch")
+                    elif final_workflow_type == "optimization":
+                        workflow_instance = GoogleOptimizationWorkflow(schema_file=selected_schema_path)
+                        print(f"Using GoogleOptimizationWorkflow from langchain_arch")
+                    else:
+                        raise ValueError(f"Unsupported workflow type: {final_workflow_type}")
+                elif platform == "facebook":
+                    # For Facebook, use workflows from facebook_arch
+                    if not app_state.get("facebook_components_available", False):
+                        raise ImportError("Facebook components were not successfully imported during startup")
+                        
+                    try:
+                        # Try to import from facebook_arch
+                        from facebook_arch.chains.insight_workflow import InsightWorkflow as FacebookInsightWorkflow
+                        from facebook_arch.chains.optimization_workflow import OptimizationWorkflow as FacebookOptimizationWorkflow
+                        
+                        if final_workflow_type == "insight":
+                            workflow_instance = FacebookInsightWorkflow(schema_file=selected_schema_path) 
+                            print(f"Using FacebookInsightWorkflow from facebook_arch")
+                        elif final_workflow_type == "optimization":
+                            workflow_instance = FacebookOptimizationWorkflow(schema_file=selected_schema_path)
+                            print(f"Using FacebookOptimizationWorkflow from facebook_arch")
+                        else:
+                            raise ValueError(f"Unsupported workflow type: {final_workflow_type}")
+                    except ImportError as ie:
+                        print(f"ERROR: Could not import Facebook workflows from facebook_arch: {ie}")
+                        await connection_manager.send_json(user_id, {
+                            "type": "error", 
+                            "workflow_id": workflow_id,
+                            "step": "generate_queries", 
+                            "message": f"Facebook workflow components not found: {ie}"
+                        })
+                        return  # Exit early
                 else:
-                    raise ValueError(f"Unsupported workflow type: {final_workflow_type}")
+                    raise ValueError(f"Unsupported platform: {platform}")
                 
                 if workflow_instance:
                     async for chunk in workflow_instance.run(user_query):
@@ -700,18 +772,67 @@ async def run_workflow_background(
                 final_message_type = "final_insight"  # Default
                 
                 try:
-                    # Instantiate the graph agent
-                    graph_agent = GraphGeneratorAgent()
-
-                    # Instantiate the correct text-based agent
-                    if final_workflow_type == "insight":
-                        final_text_agent = InsightGeneratorAgent()
-                        final_message_type = "final_insight"
-                    elif final_workflow_type == "optimization":
-                        final_text_agent = OptimizationRecommendationGeneratorAgent()
-                        final_message_type = "final_recommendation"
+                    # Instantiate platform-specific agents
+                    if platform == "google":
+                        # For Google, use agents from langchain_arch
+                        if not app_state.get("google_components_available", False):
+                            raise ImportError("Google components were not successfully imported during startup")
+                            
+                        from langchain_arch.agents.graph_generator import GraphGeneratorAgent
+                        from langchain_arch.agents.insight_generator import InsightGeneratorAgent as GoogleInsightAgent
+                        from langchain_arch.agents.optimization_generator import OptimizationRecommendationGeneratorAgent as GoogleOptimizationAgent
+                        
+                        # Graph agent is shared across platforms
+                        graph_agent = GraphGeneratorAgent()
+                        
+                        # Text agent depends on workflow type
+                        if final_workflow_type == "insight":
+                            final_text_agent = GoogleInsightAgent()
+                            final_message_type = "final_insight"
+                            print(f"Using GoogleInsightAgent from langchain_arch")
+                        elif final_workflow_type == "optimization":
+                            final_text_agent = GoogleOptimizationAgent()
+                            final_message_type = "final_recommendation"
+                            print(f"Using GoogleOptimizationAgent from langchain_arch")
+                        else:
+                            raise ValueError(f"Unknown workflow type for final analysis: {final_workflow_type}")
+                    
+                    elif platform == "facebook":
+                        # For Facebook, use agents from facebook_arch
+                        if not app_state.get("facebook_components_available", False):
+                            raise ImportError("Facebook components were not successfully imported during startup")
+                            
+                        try:
+                            # GraphGeneratorAgent is shared across platforms
+                            from langchain_arch.agents.graph_generator import GraphGeneratorAgent
+                            graph_agent = GraphGeneratorAgent()
+                            
+                            # Try to import platform-specific text agents
+                            from facebook_arch.agents.insight_generator import InsightGeneratorAgent as FacebookInsightAgent
+                            from facebook_arch.agents.optimization_generator import OptimizationRecommendationGeneratorAgent as FacebookOptimizationAgent
+                            
+                            if final_workflow_type == "insight":
+                                final_text_agent = FacebookInsightAgent()
+                                final_message_type = "final_insight"
+                                print(f"Using FacebookInsightAgent from facebook_arch")
+                            elif final_workflow_type == "optimization":
+                                final_text_agent = FacebookOptimizationAgent()
+                                final_message_type = "final_recommendation"
+                                print(f"Using FacebookOptimizationAgent from facebook_arch")
+                            else:
+                                raise ValueError(f"Unknown workflow type for final analysis: {final_workflow_type}")
+                                
+                        except ImportError as ie:
+                            print(f"ERROR: Could not import Facebook agents from facebook_arch: {ie}")
+                            await connection_manager.send_json(user_id, {
+                                "type": "error", 
+                                "workflow_id": workflow_id,
+                                "step": "FinalAnalysis", 
+                                "message": f"Facebook analysis components not found: {ie}"
+                            })
+                            return  # Exit early
                     else:
-                        raise ValueError(f"Unknown workflow type for final analysis: {final_workflow_type}")
+                        raise ValueError(f"Unsupported platform: {platform}")
                     
                     # Prepare inputs for both agents
                     text_agent_query = user_query

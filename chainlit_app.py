@@ -3,9 +3,11 @@ import asyncio
 import json
 import os
 import sys
+import uuid # Import the uuid module
 from dotenv import load_dotenv
 from langchain_core.tracers.log_stream import RunLogPatch
 from chainlit.element import Text # Correct import
+from langchain_openai import ChatOpenAI # Import ChatOpenAI
 
 # --- Setup (Imports, Paths, Validation) ---
 # Use __file__ if available, otherwise fallback for interactive environments
@@ -19,7 +21,7 @@ else:
 
 sys.path.insert(0, project_root)
 # Ensure this path is correct relative to your project root
-from langchain_arch.chains.router import Router
+from Backend.facebook_arch.chains.router import Router
 
 dotenv_path = os.path.join(project_root, '.env')
 load_dotenv(dotenv_path=dotenv_path)
@@ -47,9 +49,13 @@ async def start_chat():
 async def main(message: cl.Message):
     user_query = message.content
     schema_path = schema_path_abs
+    user_id = str(uuid.uuid4()) # Generate a random UUID for this interaction
 
     try:
-        router = Router(schema_file=schema_path)
+        # Initialize the LLM
+        llm = ChatOpenAI(temperature=0)
+        # Pass the LLM instance to the Router
+        router = Router(schema_file=schema_path, llm=llm)
     except Exception as e:
         await cl.Message(content=f"Error initializing the Router: {e}").send()
         return
@@ -70,7 +76,7 @@ async def main(message: cl.Message):
     error_details = ""
 
     try:
-        async for chunk in router.run(user_query=user_query):
+        async for chunk in router.run(user_query=user_query, user_id=user_id):
             if isinstance(chunk, dict):
                 msg_type = chunk.get("type")
                 step = chunk.get("step", "Unknown")
