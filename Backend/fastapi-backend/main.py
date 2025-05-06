@@ -706,16 +706,25 @@ async def run_workflow_background(
                                         record_dict[key] = str(value) # Update the value in the dictionary
                             
                             # Store the modified result with its objective
-                            query_result = {
-                            "platform": platform,
-                            "objective": objective,
-                                "query": query,
+                            collected_result_for_final_message = {
+                                "platform": platform,
+                                "objective": objective,
+                                "query": query, # This is the Cypher query string
                                 "data": data # Now contains stringified dates/times
-                        }
-                            all_query_results.append(query_result)
-                        
-                            # Send individual query result (with stringified dates) to frontend
-                            await connection_manager.send_json(user_id, query_result)
+                            }
+                            all_query_results.append(collected_result_for_final_message) # Keep collecting for the final message
+
+                            # Construct the WebSocket message for INDIVIDUAL query result delivery
+                            # Make it match the structure sent by _execute_queries_on_driver
+                            individual_websocket_message = {
+                                "type": "query_result", # ADDED type
+                                "workflow_id": workflow_id, # ADDED workflow_id
+                                "platform": platform,
+                                "objective": objective,
+                                "query": query, # Ensure query string is included if frontend expects it for context
+                                "data": data
+                            }
+                            await connection_manager.send_json(user_id, individual_websocket_message)
                     
                     except Exception as query_err:
                         print(f"ERROR executing {platform} query for {objective}: {query_err}")
@@ -920,10 +929,11 @@ async def run_workflow_background(
                             "workflow_id": workflow_id,
                             **final_text_payload,
                             "graph_suggestions": graph_suggestions_list,
+                            "executed_queries": all_query_results, # ADDED executed_queries
                             "query_generation_reasoning": captured_reasoning or "N/A" 
                         }
                         await connection_manager.send_json(user_id, final_response)
-                        print(f"Sent final {final_message_type} message with {len(graph_suggestions_list)} graph suggestions.")
+                        print(f"Sent final {final_message_type} message with {len(graph_suggestions_list)} graph suggestions and {len(all_query_results)} executed queries.") # MODIFIED print
                     else:
                         print("Skipping final combined message as text agent did not produce a payload.")
 

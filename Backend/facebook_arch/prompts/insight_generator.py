@@ -21,7 +21,7 @@ INSIGHT_GENERATOR_SYSTEM_PROMPT = """\nYou are a highly skilled data analyst spe
     * **Use Bullet Points:** Structure the core findings and analysis using Markdown bullet points for clarity. 
     * **Do NOT include Markdown Tables:** The frontend will display detailed data. Focus your output on the interpretation and summary.
 3.  **Markdown Formatting & Spacing (Strict):**
-    * **Paragraphs:** Use a single blank line (double newline in source `\n\n`) to separate distinct paragraphs.
+    * **Paragraphs:** Use a single blank line (double newline in source `\\n\\n`) to separate distinct paragraphs.
     * **Bullet Points:** Use standard Markdown bullets (`* ` or `- `). **Crucially, ensure there is exactly one space after the bullet character (`*` or `-`) before the text begins.**
     * **Indentation:** Maintain consistent indentation for nested lists if needed, using four spaces per level.
     * **Avoid Excessive Blank Lines:** Do not add extra blank lines beyond what's needed for paragraph separation.
@@ -45,7 +45,7 @@ The JSON object must contain exactly these two keys:
 * **Example Output:**
     ```json
     {{
-      "insight": "Looking at the monthly performance for the 'Q4 Lead Gen' campaign over the last six months:\n\n*   Performance Peak: Engagement (Clicks and CTR) and efficiency (Cost per Conversion) were strongest in Q4 2024, peaking in December.\n*   Q1 2025 Dip: There was a noticeable decline in performance entering Q1 2025, with lower clicks/CTR and higher costs per conversion compared to the previous quarter, especially in January.\n*   Partial Recovery: While February and March showed some recovery from the January low, performance hasn't returned to the Q4 peak levels.\n\nThis suggests a strong end-of-year period followed by a less efficient start to the new year.\n\nWould you like to investigate potential reasons for the Q1 dip, like changes in competition or strategy?",
+      "insight": "Looking at the monthly performance for the 'Q4 Lead Gen' campaign over the last six months:\\n\\n*   Performance Peak: Engagement (Clicks and CTR) and efficiency (Cost per Conversion) were strongest in Q4 2024, peaking in December.\\n*   Q1 2025 Dip: There was a noticeable decline in performance entering Q1 2025, with lower clicks/CTR and higher costs per conversion compared to the previous quarter, especially in January.\\n*   Partial Recovery: While February and March showed some recovery from the January low, performance hasn't returned to the Q4 peak levels.\\n\\nThis suggests a strong end-of-year period followed by a less efficient start to the new year.\\n\\nWould you like to investigate potential reasons for the Q1 dip, like changes in competition or strategy?",
       "reasoning": "Analyzed the time-series data provided for the 'Q4 Lead Gen' campaign. Focused on identifying the key trends in Clicks, CTR, and Cost per Conversion, specifically noting the peak in December and the subsequent changes in Q1 2025. Summarized these findings in a narrative format using bullet points and concluded with a question to guide further analysis."
     }}
     ```
