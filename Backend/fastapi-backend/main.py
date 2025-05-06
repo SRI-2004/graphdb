@@ -218,7 +218,8 @@ async def startup_event():
     try:
         app_state["google_neo4j_driver"] = AsyncGraphDatabase.driver(
             GOOGLE_NEO4J_URI,
-            auth=(GOOGLE_NEO4J_USERNAME, GOOGLE_NEO4J_PASSWORD)
+            auth=(GOOGLE_NEO4J_USERNAME, GOOGLE_NEO4J_PASSWORD),
+            max_connection_lifetime=3600  # 1 hour
         )
         await app_state["google_neo4j_driver"].verify_connectivity()
         print(f"Google Neo4j driver initialized and connection verified successfully at: {GOOGLE_NEO4J_URI}")
@@ -233,7 +234,8 @@ async def startup_event():
     try:
         app_state["facebook_neo4j_driver"] = AsyncGraphDatabase.driver(
             FACEBOOK_NEO4J_URI,
-            auth=(FACEBOOK_NEO4J_USERNAME, FACEBOOK_NEO4J_PASSWORD)
+            auth=(FACEBOOK_NEO4J_USERNAME, FACEBOOK_NEO4J_PASSWORD),
+            max_connection_lifetime=3600  # 1 hour
         )
         await app_state["facebook_neo4j_driver"].verify_connectivity()
         print(f"Facebook Neo4j driver initialized and connection verified successfully at: {FACEBOOK_NEO4J_URI}")
