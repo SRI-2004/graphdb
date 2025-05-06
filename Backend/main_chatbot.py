@@ -203,6 +203,10 @@ class AgentApiResponse(BaseModel):
 async def root():
     return {"status": "ok"}
 
+@app.head("/")
+async def head_root():
+    return {"status": "ok"}
+
 @app.post("/api/chat", response_model=AgentApiResponse)
 async def chat(request: ChatRequest):
     try:
