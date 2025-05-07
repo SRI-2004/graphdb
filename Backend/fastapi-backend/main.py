@@ -695,41 +695,82 @@ async def run_workflow_background(
                         # Need imports for temporal types if not already present globally
                         from neo4j.time import Date, DateTime, Time
                         from datetime import date, datetime, time
+                        import neo4j.exceptions # Import for specific error handling
+
+                        query_successful = False
+                        processed_data_for_this_query = [] # Default to empty
+                        max_retries = 3
+                        base_retry_delay_seconds = 1
+
+                        for attempt in range(max_retries):
+                            try:
+                                async with driver.session() as session:
+                                    result = await session.run(query)
+                                    raw_data = await result.data()
+
+                                processed_data_for_this_query = []
+                                for record_dict in raw_data:
+                                    processed_record = {}
+                                    for key, value in record_dict.items():
+                                        if isinstance(value, (Date, DateTime, Time, date, datetime, time)):
+                                            processed_record[key] = str(value)
+                                        else:
+                                            processed_record[key] = value
+                                    processed_data_for_this_query.append(processed_record)
+                                
+                                query_successful = True
+                                break # Success
+
+                            except (neo4j.exceptions.ServiceUnavailable, neo4j.exceptions.SessionExpired) as e:
+                                print(f"WARNING: Query '{objective}' for {platform} (Attempt {attempt + 1}/{max_retries}) failed with retryable error: {e}")
+                                if attempt + 1 < max_retries:
+                                    delay = base_retry_delay_seconds * (2 ** attempt)
+                                    print(f"Retrying in {delay}s...")
+                                    await asyncio.sleep(delay)
+                                else:
+                                    print(f"ERROR: All {max_retries} retries failed for query '{objective}' for {platform}. Last error: {e}")
+                                    await connection_manager.send_json(user_id, {
+                                        "type": "error", 
+                                        "workflow_id": workflow_id,
+                                        "step": "execute_query",
+                                        "platform": platform,
+                                        "objective": objective,
+                                        "message": f"Failed to execute {platform} query for '{objective}' after {max_retries} attempts: {e}"
+                                    })
+                            except Exception as query_err_inner: # Renamed to avoid conflict with outer query_err
+                                print(f"ERROR executing {platform} query for {objective} (non-retryable): {query_err_inner}")
+                                await connection_manager.send_json(user_id, {
+                                    "type": "error", 
+                                    "workflow_id": workflow_id,
+                                    "step": "execute_query",
+                                    "platform": platform,
+                                    "objective": objective,
+                                    "message": f"Error executing {platform} query: {query_err_inner}"
+                                })
+                                break # Do not retry for these other exceptions
                         
-                        async with driver.session() as session:
-                            result = await session.run(query)
-                            data = await result.data() # Get results as a list of dictionaries
-                            
-                            # Convert any Neo4j temporal types or Python datetime types to strings
-                            # Important: Modify the list of dicts 'data' directly
-                            for record_dict in data: # Iterate through each dictionary in the list
-                                for key, value in record_dict.items():
-                                    if isinstance(value, (Date, DateTime, Time, date, datetime, time)):
-                                        record_dict[key] = str(value) # Update the value in the dictionary
-                            
-                            # Store the modified result with its objective
+                        if query_successful:
                             collected_result_for_final_message = {
                                 "platform": platform,
                                 "objective": objective,
-                                "query": query, # This is the Cypher query string
-                                "data": data # Now contains stringified dates/times
+                                "query": query,
+                                "data": processed_data_for_this_query
                             }
-                            all_query_results.append(collected_result_for_final_message) # Keep collecting for the final message
+                            all_query_results.append(collected_result_for_final_message)
 
-                            # Construct the WebSocket message for INDIVIDUAL query result delivery
-                            # Make it match the structure sent by _execute_queries_on_driver
                             individual_websocket_message = {
-                                "type": "query_result", # ADDED type
-                                "workflow_id": workflow_id, # ADDED workflow_id
+                                "type": "query_result",
+                                "workflow_id": workflow_id,
                                 "platform": platform,
                                 "objective": objective,
-                                "query": query, # Ensure query string is included if frontend expects it for context
-                                "data": data
+                                "query": query,
+                                "data": processed_data_for_this_query
                             }
                             await connection_manager.send_json(user_id, individual_websocket_message)
+                        # If not successful, error was already sent
                     
-                    except Exception as query_err:
-                        print(f"ERROR executing {platform} query for {objective}: {query_err}")
+                    except Exception as query_err: # This is the outer try-except for the whole query execution block, should be less likely to hit now
+                        print(f"ERROR executing {platform} query for {objective}: {query_err}") # This query_err is from the loop's own try
                         await connection_manager.send_json(user_id, {
                             "type": "error", 
                             "workflow_id": workflow_id,
@@ -1105,10 +1146,11 @@ async def _execute_queries_on_driver(
 
     from neo4j.time import Date, DateTime, Time
     from datetime import date, datetime, time
+    import neo4j.exceptions # Import neo4j exceptions for specific handling
 
     for i, query_obj in enumerate(queries_list):
         objective = query_obj.get("objective", f"{platform_name} Query {i+1}")
-        query_str = query_obj.get("query", "").strip() # Renamed to query_str to avoid conflict with query var name
+        query_str = query_obj.get("query", "").strip()
 
         if not query_str:
             print(f"WARNING: Empty query for {platform_name} objective: {objective}")
@@ -1124,42 +1166,75 @@ async def _execute_queries_on_driver(
             "total": len(queries_list)
         })
 
-        try:
-            async with driver.session() as session:
-                result = await session.run(query_str) # Use query_str
-                data = await result.data()
+        query_successful = False
+        processed_data_for_this_query = [] # Default to empty
+        max_retries = 3
+        base_retry_delay_seconds = 1
 
-                for record_dict in data:
+        for attempt in range(max_retries):
+            try:
+                async with driver.session() as session:
+                    result = await session.run(query_str)
+                    raw_data = await result.data()
+
+                processed_data_for_this_query = []
+                for record_dict in raw_data:
+                    # Create a new dict to avoid modifying the original from result.data() if it's cached/reused
+                    processed_record = {}
                     for key, value in record_dict.items():
                         if isinstance(value, (Date, DateTime, Time, date, datetime, time)):
-                            record_dict[key] = str(value)
+                            processed_record[key] = str(value)
+                        else:
+                            processed_record[key] = value
+                    processed_data_for_this_query.append(processed_record)
                 
-                # This is the dictionary that gets returned by the function in a list
-                collected_result = {
-                    "platform": platform_name, 
-                    "objective": objective, 
-                    "query": query_str, # Store the executed query string
-                    "data": data
-                }
-                all_query_results_for_platform.append(collected_result)
+                query_successful = True
+                break # Success, exit retry loop
 
-                # This is the WebSocket message for individual query result (can stay as is)
+            except (neo4j.exceptions.ServiceUnavailable, neo4j.exceptions.SessionExpired) as e:
+                print(f"WARNING: Query '{objective}' for {platform_name} (Attempt {attempt + 1}/{max_retries}) failed with retryable error: {e}")
+                if attempt + 1 < max_retries:
+                    delay = base_retry_delay_seconds * (2 ** attempt) # Exponential backoff
+                    print(f"Retrying in {delay}s...")
+                    await asyncio.sleep(delay)
+                else:
+                    print(f"ERROR: All {max_retries} retries failed for query '{objective}' for {platform_name}. Last error: {e}")
+                    await connection_manager.send_json(user_id, {
+                        "type": "error",
+                        "workflow_id": workflow_id,
+                        "step": f"execute_{platform_name}_query_detail",
+                        "objective": objective,
+                        "message": f"Failed to execute {platform_name} query for '{objective}' after {max_retries} attempts: {e}"
+                    })
+            except Exception as query_err: # Catch other, non-retryable errors
+                print(f"ERROR executing {platform_name} query for {objective} (non-retryable): {query_err}")
                 await connection_manager.send_json(user_id, {
-                    "type": "query_result",
+                    "type": "error",
                     "workflow_id": workflow_id,
-                    "platform": platform_name,
+                    "step": f"execute_{platform_name}_query_detail",
                     "objective": objective,
-                    "data": data 
+                    "message": f"Error executing {platform_name} query: {query_err}"
                 })
-        except Exception as query_err:
-            print(f"ERROR executing {platform_name} query for {objective}: {query_err}")
+                break # Do not retry for these errors
+        
+        if query_successful:
+            collected_result = {
+                "platform": platform_name, 
+                "objective": objective, 
+                "query": query_str,
+                "data": processed_data_for_this_query
+            }
+            all_query_results_for_platform.append(collected_result)
+
             await connection_manager.send_json(user_id, {
-                "type": "error",
+                "type": "query_result",
                 "workflow_id": workflow_id,
-                "step": f"execute_{platform_name}_query_detail",
+                "platform": platform_name,
                 "objective": objective,
-                "message": f"Error executing {platform_name} query: {query_err}"
+                "query": query_str, # Sending the query string back
+                "data": processed_data_for_this_query
             })
+        # If not query_successful, an error message for this specific query was already sent.
 
     await connection_manager.send_json(user_id, {
         "type": "status",
@@ -1218,6 +1293,8 @@ async def run_general_insight_workflow_background(
     
     final_insight_text = "Could not generate combined insight."
     final_graph_suggestions = []
+    combined_reasoning = "N/A"  # Initialize combined_reasoning
+    combined_query_results = [] # Initialize combined_query_results
 
     try:
         # --- Step 1: Google Insight Data Gathering ---
@@ -1312,6 +1389,7 @@ async def run_general_insight_workflow_background(
         # --- Step 3: Combine Data & Generate Final Insight ---
         if not all_google_query_results and not all_facebook_query_results:
             final_insight_text = "No data was found from Google or Facebook for your query."
+            # combined_reasoning remains "N/A", combined_query_results remains []
             await connection_manager.send_json(user_id, {
                 "type": "status", "workflow_id": workflow_id, "step": "combined_analysis",
                 "status": "skipped", "details": final_insight_text

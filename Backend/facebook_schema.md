@@ -38,6 +38,7 @@
 - owner_id : Double
 - partner : String
 - spend_cap : String
+- status : Long
 - tax_id : String
 - tax_id_type : String
 - timezone_id : Double
