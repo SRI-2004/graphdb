@@ -21,6 +21,12 @@ from typing import Dict, List, Any, Optional, Union
 import uuid # Add UUID import
 import json
 
+# Import the new E2B graph router
+from e2b_graph_router import router as e2b_graph_router
+
+# Import the generate_e2b_graph_image function directly at the top
+from e2b_graph_utils import generate_e2b_graph_image
+
 import logging
 # 2) Turn down Uvicorn's logger to WARNING (so it won't print INFO messages)
 logging.getLogger("uvicorn").setLevel(logging.WARNING)
@@ -143,6 +149,9 @@ app.add_middleware(
     allow_methods=["*"], # Allow all methods (GET, POST, etc.)
     allow_headers=["*"], # Allow all headers
 )
+
+# Include the E2B graph router
+app.include_router(e2b_graph_router)
 
 # --- Pydantic Models (for request/response validation) ---
 
@@ -961,22 +970,98 @@ async def run_workflow_background(
                     if isinstance(graph_agent_output, Exception):
                         print(f"!!! ERROR in graph agent: {graph_agent_output}")
                     elif isinstance(graph_agent_output, dict) and 'graph_suggestions' in graph_agent_output and isinstance(graph_agent_output['graph_suggestions'], list):
-                        graph_suggestions_list = graph_agent_output['graph_suggestions']
+                        # Get original Plotly-based graph suggestions
+                        original_plotly_suggestions = graph_agent_output['graph_suggestions']
+                        
+                        # New: Convert plotly suggestions to E2B-generated image suggestions
+                        enhanced_suggestions = []
+                        
+                        # Process each graph suggestion
+                        for suggestion in original_plotly_suggestions:
+                            try:
+                                print(f"[GRAPH_PROCESSING] Processing suggestion: {suggestion.get('title')}, Objective: {suggestion.get('data_source_objective')}")
+                                # Extract data source objective to find corresponding data
+                                data_source_objective = suggestion.get("data_source_objective")
+                                
+                                # Locate the relevant dataset from all_query_results
+                                relevant_data = None
+                                if data_source_objective:
+                                    for result in all_query_results:
+                                        if result.get("objective") == data_source_objective:
+                                            relevant_data = result.get("data", [])
+                                            print(f"[GRAPH_PROCESSING] Found data for objective '{data_source_objective}'. Data points: {len(relevant_data)}")
+                                            break
+                                
+                                if not relevant_data:
+                                    print(f"[GRAPH_PROCESSING] Warning: No data found for objective '{data_source_objective}'. Appending original suggestion.")
+                                    enhanced_suggestions.append(suggestion)
+                                    continue
+                                
+                                # Transform Plotly parameters to matplotlib-compatible format
+                                plot_params = {
+                                    "type": suggestion.get("chart_type", "bar").lower(),
+                                    "x": suggestion.get("columns", {}).get("x"),
+                                    "y": suggestion.get("columns", {}).get("y"), # The prompt generates a single "y"
+                                    "title": suggestion.get("title", "Graph"),
+                                    "xlabel": suggestion.get("x_axis_title", suggestion.get("columns", {}).get("x", "")),
+                                    "ylabel": suggestion.get("y_axis_title", suggestion.get("columns", {}).get("y", "Value")) # Also update ylabel to use new y
+                                }
+                                print(f"[GRAPH_PROCESSING] Plot params for E2B: {plot_params}")
+                                
+                                # Basic theme params - could be extended with frontend theming
+                                theme_params = {
+                                    "backgroundColor": "white",
+                                    "textColor": "black",
+                                    "barColor": "skyblue" if plot_params["type"] == "bar" else None,
+                                    "lineColor": "steelblue" if plot_params["type"] == "line" else None,
+                                    "scatterMarkerColor": "coral" if plot_params["type"] == "scatter" else None
+                                }
+                                
+                                print(f"[GRAPH_PROCESSING] Attempting E2B image generation for: {suggestion.get('title')}")
+                                base64_image = await generate_e2b_graph_image(
+                                    data=relevant_data,
+                                    plot_parameters=plot_params,
+                                    theme_parameters=theme_params
+                                )
+                                
+                                if base64_image:
+                                    print(f"[GRAPH_PROCESSING] E2B image generated successfully for: {suggestion.get('title')}")
+                                    enhanced_suggestion = {
+                                        "title": suggestion.get("title", "Graph"),
+                                        "description": suggestion.get("description", ""),
+                                        "type": "image",
+                                        "image_base64": base64_image,
+                                        "original_suggestion": suggestion
+                                    }
+                                    enhanced_suggestions.append(enhanced_suggestion)
+                                else:
+                                    print(f"[GRAPH_PROCESSING] Warning: Failed to generate E2B image for {suggestion.get('title')}. Appending original suggestion.")
+                                    enhanced_suggestions.append(suggestion)
+                                    
+                            except Exception as e:
+                                print(f"[GRAPH_PROCESSING] Error during E2B image transformation for suggestion '{suggestion.get('title')}': {e}. Appending original suggestion.")
+                                import traceback
+                                print(traceback.format_exc())
+                                enhanced_suggestions.append(suggestion)
+                        
+                        # Use the enhanced suggestions list (with images where possible)
+                        final_graph_suggestions = enhanced_suggestions
+                        print(f"[GRAPH_PROCESSING] Total enhanced suggestions: {len(final_graph_suggestions)}. First item type: {final_graph_suggestions[0].get('type') if final_graph_suggestions else 'N/A'}")
                     else:
                         print(f"WARNING: Graph agent returned unexpected structure or no suggestions: {graph_agent_output}")
-                        
+
                     # Combine and Send Final Message ONLY if the text agent succeeded
                     if final_text_payload is not None: 
                         final_response = {
                         "type": final_message_type, 
                             "workflow_id": workflow_id,
                             **final_text_payload,
-                            "graph_suggestions": graph_suggestions_list,
+                            "graph_suggestions": final_graph_suggestions,
                             "executed_queries": all_query_results, # ADDED executed_queries
                             "query_generation_reasoning": captured_reasoning or "N/A" 
                         }
                         await connection_manager.send_json(user_id, final_response)
-                        print(f"Sent final {final_message_type} message with {len(graph_suggestions_list)} graph suggestions and {len(all_query_results)} executed queries.") # MODIFIED print
+                        print(f"Sent final {final_message_type} message with {len(final_graph_suggestions)} graph suggestions and {len(all_query_results)} executed queries.") # MODIFIED print
                     else:
                         print("Skipping final combined message as text agent did not produce a payload.")
 
@@ -1325,6 +1410,7 @@ async def run_general_insight_workflow_background(
                 {**q, 'objective': f"google: {q.get('objective', f'Query {i+1}')}"} 
                 for i, q in enumerate(google_generated_queries_raw)
             ]
+            print(f"[GENERAL_INSIGHT_DEBUG] Google workflow generated {len(google_generated_queries_raw)} raw queries.") # ADDED
 
             if google_generated_queries_prefixed:
                 all_google_query_results = await _execute_queries_on_driver(
@@ -1370,6 +1456,7 @@ async def run_general_insight_workflow_background(
                 {**q, 'objective': f"facebook: {q.get('objective', f'Query {i+1}')}"} 
                 for i, q in enumerate(facebook_generated_queries_raw)
             ]
+            print(f"[GENERAL_INSIGHT_DEBUG] Facebook workflow generated {len(facebook_generated_queries_raw)} raw queries.") # ADDED
 
             if facebook_generated_queries_prefixed:
                 all_facebook_query_results = await _execute_queries_on_driver(
@@ -1388,6 +1475,7 @@ async def run_general_insight_workflow_background(
 
         # --- Step 3: Combine Data & Generate Final Insight ---
         if not all_google_query_results and not all_facebook_query_results:
+            print("[GENERAL_INSIGHT_DEBUG] No query results from Google or Facebook. Skipping combined analysis.") # ADDED
             final_insight_text = "No data was found from Google or Facebook for your query."
             # combined_reasoning remains "N/A", combined_query_results remains []
             await connection_manager.send_json(user_id, {
@@ -1395,6 +1483,7 @@ async def run_general_insight_workflow_background(
                 "status": "skipped", "details": final_insight_text
             })
         else:
+            print(f"[GENERAL_INSIGHT_DEBUG] Proceeding to combined analysis. Google results: {len(all_google_query_results)}, Facebook results: {len(all_facebook_query_results)}.") # ADDED
             await connection_manager.send_json(user_id, {
                 "type": "status", "workflow_id": workflow_id, "step": "combined_analysis",
                 "status": "in_progress", "details": "Combining data and generating final insight..."
@@ -1412,12 +1501,14 @@ Facebook Reasoning:
                 from langchain_arch.agents.insight_generator import InsightGeneratorAgent
                 insight_agent = InsightGeneratorAgent() # Assuming default init is fine
                 
+                print("[GENERAL_INSIGHT_DEBUG] About to call InsightGeneratorAgent...") # ADDED
                 insight_agent_output = await insight_agent.run(
                     query=user_query,
                     data=combined_query_results,
                     user_id=user_id, # Pass user_id if agent uses it
                     query_generation_reasoning=combined_reasoning
                 )
+                print(f"[GENERAL_INSIGHT_DEBUG] InsightGeneratorAgent output: {type(insight_agent_output)}") # ADDED
                 
                 if isinstance(insight_agent_output, dict) and "insight" in insight_agent_output:
                     final_insight_text = insight_agent_output["insight"]
@@ -1430,21 +1521,86 @@ Facebook Reasoning:
                 # Graph Suggestions
                 from langchain_arch.agents.graph_generator import GraphGeneratorAgent
                 graph_agent = GraphGeneratorAgent()
-                # Pass combined results (with prefixed objectives) to graph agent
-                graph_agent_input = {"query": user_query, "data": combined_query_results} 
+                graph_agent_input = {"query": user_query, "data": combined_query_results}
+                print(f"[GENERAL_INSIGHT_DEBUG] About to call GraphGeneratorAgent with input keys: {list(graph_agent_input.keys())} and {len(combined_query_results)} combined results.") # Ensure this is before ainvoke
                 graph_agent_output = await graph_agent.chain.ainvoke(graph_agent_input)
+                print(f"[GENERAL_INSIGHT_DEBUG] GraphGeneratorAgent output type: {type(graph_agent_output)}")
+                # print(f"[GENERAL_INSIGHT_DEBUG] GraphGeneratorAgent raw output: {graph_agent_output}") # Keep commented for now
+
                 if isinstance(graph_agent_output, dict) and 'graph_suggestions' in graph_agent_output:
-                    # Ensure graph agent associates suggestions with the prefixed objectives
-                    # (This assumes the agent's prompt guides it or it picks up the objective field correctly)
-                    final_graph_suggestions = graph_agent_output['graph_suggestions']
+                    original_plotly_suggestions = graph_agent_output['graph_suggestions']
+                    print(f"[GENERAL_INSIGHT_DEBUG] GraphGeneratorAgent produced {len(original_plotly_suggestions)} original_plotly_suggestions.") # ADDED
+                    enhanced_suggestions = []
+                    
+                    # Process each graph suggestion
+                    for suggestion in original_plotly_suggestions:
+                        try:
+                            print(f"[GRAPH_PROCESSING_GENERAL_INSIGHT] Processing suggestion: {suggestion.get('title')}, Objective: {suggestion.get('data_source_objective')}")
+                            data_source_objective = suggestion.get("data_source_objective")
+                            relevant_data = None
+                            if data_source_objective:
+                                for result in combined_query_results: # Ensure this uses combined_query_results
+                                    if result.get("objective") == data_source_objective:
+                                        relevant_data = result.get("data", [])
+                                        print(f"[GRAPH_PROCESSING_GENERAL_INSIGHT] Found data for objective '{data_source_objective}'. Data points: {len(relevant_data)}")
+                                        break
+                            
+                            if not relevant_data:
+                                print(f"[GRAPH_PROCESSING_GENERAL_INSIGHT] Warning: No data found for objective '{data_source_objective}'. Appending original suggestion.")
+                                enhanced_suggestions.append(suggestion)
+                                continue
+                            
+                            plot_params = {
+                                "type": suggestion.get("chart_type", "bar").lower(),
+                                "x": suggestion.get("columns", {}).get("x"),
+                                "y": suggestion.get("columns", {}).get("y"), # The prompt generates a single "y"
+                                "title": suggestion.get("title", "Graph"),
+                                "xlabel": suggestion.get("x_axis_title", suggestion.get("columns", {}).get("x", "")),
+                                "ylabel": suggestion.get("y_axis_title", suggestion.get("columns", {}).get("y", "Value")) # Also update ylabel to use new y
+                            }
+                            print(f"[GRAPH_PROCESSING_GENERAL_INSIGHT] Plot params for E2B: {plot_params}")
+                            theme_params = { # Default theme, can be customized
+                                "backgroundColor": "white", "textColor": "black",
+                                "barColor": "skyblue", "lineColor": "steelblue", "scatterMarkerColor": "coral"
+                            }
+                            
+                            print(f"[GRAPH_PROCESSING_GENERAL_INSIGHT] Attempting E2B image generation for: {suggestion.get('title')}")
+                            base64_image = await generate_e2b_graph_image(
+                                data=relevant_data,
+                                plot_parameters=plot_params,
+                                theme_parameters=theme_params
+                            )
+                            
+                            if base64_image:
+                                print(f"[GRAPH_PROCESSING_GENERAL_INSIGHT] E2B image generated successfully for: {suggestion.get('title')}")
+                                enhanced_suggestion = {
+                                    "title": suggestion.get("title", "Graph"),
+                                    "description": suggestion.get("description", ""),
+                                    "type": "image",
+                                    "image_base64": base64_image,
+                                    "original_suggestion": suggestion
+                                }
+                                enhanced_suggestions.append(enhanced_suggestion)
+                            else:
+                                print(f"[GRAPH_PROCESSING_GENERAL_INSIGHT] Warning: Failed to generate E2B image for {suggestion.get('title')}. Appending original suggestion.")
+                                enhanced_suggestions.append(suggestion)
+                                
+                        except Exception as e:
+                            print(f"[GRAPH_PROCESSING_GENERAL_INSIGHT] Error during E2B image transformation for '{suggestion.get('title')}': {e}. Appending original.")
+                            import traceback
+                            print(traceback.format_exc())
+                            enhanced_suggestions.append(suggestion)
+                    
+                    final_graph_suggestions = enhanced_suggestions
+                    print(f"[GRAPH_PROCESSING_GENERAL_INSIGHT] Total enhanced suggestions: {len(final_graph_suggestions)}. First item type: {final_graph_suggestions[0].get('type') if final_graph_suggestions else 'N/A'}")
 
             except Exception as e:
-                print(f"ERROR during combined analysis: {e}")
+                print(f"ERROR during combined insight analysis: {e}")
                 import traceback
                 tb_str = traceback.format_exc()
                 await connection_manager.send_json(user_id, {
                     "type": "error", "workflow_id": workflow_id, "step": "combined_analysis",
-                    "message": f"Error during combined analysis: {e}", "details": tb_str
+                    "message": f"Error during combined insight analysis: {e}", "details": tb_str
                 })
 
         # --- Step 4: Send Final Result ---
@@ -1572,6 +1728,7 @@ async def run_general_optimization_workflow_background(
                 {**q, 'objective': f"google: {q.get('objective', f'Query {i+1}')}"} 
                 for i, q in enumerate(google_generated_queries_raw)
             ]
+            print(f"[GENERAL_OPTIMIZATION_DEBUG] Google workflow generated {len(google_generated_queries_raw)} raw queries.") # ADDED
 
             if google_generated_queries_prefixed:
                 all_google_query_results = await _execute_queries_on_driver(
@@ -1617,6 +1774,7 @@ async def run_general_optimization_workflow_background(
                 {**q, 'objective': f"facebook: {q.get('objective', f'Query {i+1}')}"} 
                 for i, q in enumerate(facebook_generated_queries_raw)
             ]
+            print(f"[GENERAL_OPTIMIZATION_DEBUG] Facebook workflow generated {len(facebook_generated_queries_raw)} raw queries.") # ADDED
 
             if facebook_generated_queries_prefixed:
                 all_facebook_query_results = await _execute_queries_on_driver(
@@ -1635,12 +1793,14 @@ async def run_general_optimization_workflow_background(
 
         # --- Step 3: Combine Data & Generate Final Optimization Recommendations ---
         if not all_google_query_results and not all_facebook_query_results:
+            print("[GENERAL_OPTIMIZATION_DEBUG] No query results from Google or Facebook. Skipping combined analysis.") # ADDED
             final_report_text = "No data was found from Google or Facebook for your optimization query."
             await connection_manager.send_json(user_id, {
                 "type": "status", "workflow_id": workflow_id, "step": "combined_analysis",
                 "status": "skipped", "details": final_report_text
             })
         else:
+            print(f"[GENERAL_OPTIMIZATION_DEBUG] Proceeding to combined analysis. Google results: {len(all_google_query_results)}, Facebook results: {len(all_facebook_query_results)}.") # ADDED
             await connection_manager.send_json(user_id, {
                 "type": "status", "workflow_id": workflow_id, "step": "combined_analysis",
                 "status": "in_progress", "details": "Combining data and generating final optimization recommendations..."
@@ -1691,13 +1851,83 @@ Facebook Reasoning:
                 graph_agent = GraphGeneratorAgent()
                 # Pass combined results (with prefixed objectives) to graph agent
                 graph_agent_input = {"query": user_query, "data": combined_query_results} 
+                print(f"[GENERAL_OPTIMIZATION_DEBUG] About to call GraphGeneratorAgent with input keys: {list(graph_agent_input.keys())} and {len(combined_query_results)} combined results.") # ADDED
                 graph_agent_output = await graph_agent.chain.ainvoke(graph_agent_input)
+                print(f"[GENERAL_OPTIMIZATION_DEBUG] GraphGeneratorAgent output type: {type(graph_agent_output)}") # ADDED
+                # print(f"[GENERAL_OPTIMIZATION_DEBUG] GraphGeneratorAgent raw output: {graph_agent_output}") # Keep commented for now
+
                 if isinstance(graph_agent_output, dict) and 'graph_suggestions' in graph_agent_output:
-                    # Ensure graph agent associates suggestions with the prefixed objectives
-                    final_graph_suggestions = graph_agent_output['graph_suggestions']
+                    original_plotly_suggestions = graph_agent_output['graph_suggestions']
+                    print(f"[GENERAL_OPTIMIZATION_DEBUG] GraphGeneratorAgent produced {len(original_plotly_suggestions)} original_plotly_suggestions.") # ADDED
+                    enhanced_suggestions = []
+                    
+                    # Process each graph suggestion
+                    for suggestion in original_plotly_suggestions:
+                        try:
+                            print(f"[GRAPH_PROCESSING_GENERAL_OPTIMIZATION] Processing suggestion: {suggestion.get('title')}, Objective: {suggestion.get('data_source_objective')}")
+                            data_source_objective = suggestion.get("data_source_objective")
+                            relevant_data = None
+                            if data_source_objective:
+                                for result in combined_query_results: # Ensure this uses combined_query_results
+                                    if result.get("objective") == data_source_objective:
+                                        relevant_data = result.get("data", [])
+                                        print(f"[GRAPH_PROCESSING_GENERAL_OPTIMIZATION] Found data for objective '{data_source_objective}'. Data points: {len(relevant_data)}")
+                                        break
+                            
+                            if not relevant_data:
+                                print(f"[GRAPH_PROCESSING_GENERAL_OPTIMIZATION] Warning: No data found for objective '{data_source_objective}'. Appending original suggestion.")
+                                enhanced_suggestions.append(suggestion)
+                                continue
+                            
+                            plot_params = {
+                                "type": suggestion.get("chart_type", "bar").lower(),
+                                "x": suggestion.get("columns", {}).get("x"),
+                                "y": suggestion.get("columns", {}).get("y"), # The prompt generates a single "y"
+                                "title": suggestion.get("title", "Graph"),
+                                "xlabel": suggestion.get("x_axis_title", suggestion.get("columns", {}).get("x", "")),
+                                "ylabel": suggestion.get("y_axis_title", suggestion.get("columns", {}).get("y", "Value")) # Also update ylabel to use new y
+                            }
+                            print(f"[GRAPH_PROCESSING_GENERAL_OPTIMIZATION] Plot params for E2B: {plot_params}")
+                            theme_params = { # Default theme, can be customized
+                                "backgroundColor": "white", "textColor": "black",
+                                "barColor": "skyblue", "lineColor": "steelblue", "scatterMarkerColor": "coral"
+                            }
+                            
+                            print(f"[GRAPH_PROCESSING_GENERAL_OPTIMIZATION] Attempting E2B image generation for: {suggestion.get('title')}")
+                            base64_image = await generate_e2b_graph_image(
+                                data=relevant_data,
+                                plot_parameters=plot_params,
+                                theme_parameters=theme_params
+                            )
+                            
+                            if base64_image:
+                                print(f"[GRAPH_PROCESSING_GENERAL_OPTIMIZATION] E2B image generated successfully for: {suggestion.get('title')}")
+                                enhanced_suggestion = {
+                                    "title": suggestion.get("title", "Graph"),
+                                    "description": suggestion.get("description", ""),
+                                    "type": "image",
+                                    "image_base64": base64_image,
+                                    "original_suggestion": suggestion
+                                }
+                                enhanced_suggestions.append(enhanced_suggestion)
+                            else:
+                                print(f"[GRAPH_PROCESSING_GENERAL_OPTIMIZATION] Warning: Failed to generate E2B image for {suggestion.get('title')}. Appending original suggestion.")
+                                enhanced_suggestions.append(suggestion)
+                                
+                        except Exception as e:
+                            print(f"[GRAPH_PROCESSING_GENERAL_OPTIMIZATION] Error during E2B image transformation for '{suggestion.get('title')}': {e}. Appending original.")
+                            import traceback
+                            print(traceback.format_exc())
+                            enhanced_suggestions.append(suggestion)
+                    
+                    final_graph_suggestions = enhanced_suggestions
+                    print(f"[GRAPH_PROCESSING_GENERAL_OPTIMIZATION] Total enhanced suggestions: {len(final_graph_suggestions)}. First item type: {final_graph_suggestions[0].get('type') if final_graph_suggestions else 'N/A'}")
+                else:
+                    print(f"[GENERAL_OPTIMIZATION_DEBUG] WARNING: Graph agent returned unexpected structure or no suggestions: {graph_agent_output}")
+                    final_graph_suggestions = [] # Ensure it's an empty list
 
             except Exception as e:
-                print(f"ERROR during combined optimization analysis: {e}")
+                print(f"ERROR during combined optimization analysis (around graph generation): {e}") # Clarified error message
                 import traceback
                 tb_str = traceback.format_exc()
                 await connection_manager.send_json(user_id, {

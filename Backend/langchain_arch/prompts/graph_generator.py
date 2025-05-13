@@ -11,16 +11,21 @@ For each distinct objective/query result set in the input data, recommend the mo
 
 **Task:**
 - Iterate through the input data list. For each result object that contains successful data (i.e., no 'error' key or error is null/empty, and 'data' is a non-empty list):
-    - Analyze the records in the 'data' list.
-    - Determine the best chart type to visualize these specific records.
+    - Analyze the records in the 'data' list to understand its structure, data types, and potential relationships.
+    - Determine the best chart type to visualize these specific records, strongly prioritizing 'bar', 'line', or 'scatter'.
     - Identify the relevant column names from the records for the chart's properties (x, y, color, names, values).
     - Create a graph suggestion object for this specific objective/result.
 
 **Constraints:**
-- Choose the chart type from this list: 'bar', 'line', 'scatter', 'pie', 'table', 'none'.
-- If a specific result's data is unsuitable for charting (e.g., single value, unstructured text), suggest 'table' or 'none' for that specific result.
+- Choose the chart type ONLY from this list: 'bar', 'line', 'scatter'.
+- If the data is genuinely unsuitable for any of these three (e.g., single textual values, categorical data not suited for comparison), you may suggest 'table' to display the raw data or 'none' if no visual representation is meaningful. However, make every effort to use 'bar', 'line', or 'scatter' if the data can be reasonably visualized this way.
+- Strive for variety and insightfulness: For each distinct objective and its data, recommend the *most* appropriate and insightful chart type from 'bar', 'line', or 'scatter'.
+    - Consider 'line' charts for trends over time or ordered categories.
+    - Consider 'scatter' plots to explore relationships or correlations between two numerical variables.
+    - Consider 'bar' charts for comparing magnitudes across categories.
+- If generating multiple graph suggestions for different datasets, aim for a thoughtful mix of these chart types if the data supports it, rather than defaulting to only one type.
 - Base column name suggestions STRICTLY on the keys present in the data records for that specific result.
-- Prioritize clarity. A simple 'table' is often better than a confusing chart.
+- Prioritize clarity. A simple, well-chosen chart is better than a confusing one.
 
 **Output Format:**
 # --- Temporarily Simplified Output Format Description ---
@@ -35,7 +40,7 @@ Each suggestion object in the list should have the following structure:
 
 ```json
 {{{{
-  "objective": "<The objective string from the corresponding input result object>",
+  "data_source_objective": "<The objective string from the corresponding input result object>",
   "type": "<chart_type>",
   "columns": {{{{
     "x": "<column_name_for_x_axis_or_null>",
